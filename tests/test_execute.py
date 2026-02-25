@@ -1,0 +1,80 @@
+"""Tests for the execute tool (all use mocked client)."""
+from __future__ import annotations
+
+from testrail_mcp.server import execute as _execute_tool
+
+execute = _execute_tool.fn
+
+
+def test_invalid_category(mock_client):
+    result = execute("nonexistent", "get_projects")
+    assert "error" in result
+    assert "available_categories" in result
+    mock_client.assert_not_called()
+
+
+def test_invalid_method(mock_client):
+    result = execute("projects", "nonexistent_method")
+    assert "error" in result
+    assert "available_methods" in result
+
+
+def test_missing_env_vars(monkeypatch):
+    monkeypatch.delenv("TESTRAIL_URL", raising=False)
+    monkeypatch.delenv("TESTRAIL_USERNAME", raising=False)
+    monkeypatch.delenv("TESTRAIL_API_KEY", raising=False)
+    # _client is None (reset by autouse fixture), so execute will try _get_client()
+    result = execute("projects", "get_projects")
+    assert "error" in result
+    assert "Missing" in result["error"]
+
+
+def test_successful_dict_return(mock_client):
+    mock_client.projects.get_projects.return_value = {"id": 1}
+    result = execute("projects", "get_projects")
+    assert result == {"id": 1}
+
+
+def test_successful_list_return(mock_client):
+    mock_client.projects.get_projects.return_value = [{"id": 1}]
+    result = execute("projects", "get_projects")
+    assert result == [{"id": 1}]
+
+
+def test_none_return_becomes_status_ok(mock_client):
+    mock_client.projects.get_projects.return_value = None
+    result = execute("projects", "get_projects")
+    assert result == {"status": "ok"}
+
+
+def test_empty_list_returned_as_is(mock_client):
+    mock_client.projects.get_projects.return_value = []
+    result = execute("projects", "get_projects")
+    assert result == []
+
+
+def test_params_passed_as_kwargs(mock_client):
+    mock_client.projects.get_project.return_value = {"id": 1}
+    execute("projects", "get_project", params={"project_id": 42})
+    mock_client.projects.get_project.assert_called_once_with(project_id=42)
+
+
+def test_params_none_treated_as_empty(mock_client):
+    mock_client.projects.get_projects.return_value = []
+    execute("projects", "get_projects", params=None)
+    mock_client.projects.get_projects.assert_called_once_with()
+
+
+def test_api_exception_caught(mock_client):
+    mock_client.projects.get_projects.side_effect = RuntimeError("fail")
+    result = execute("projects", "get_projects")
+    assert "error" in result
+    assert "RuntimeError" in result["error"]
+    assert "fail" in result["error"]
+
+
+def test_type_error_caught(mock_client):
+    mock_client.projects.get_projects.side_effect = TypeError("unexpected keyword")
+    result = execute("projects", "get_projects")
+    assert "error" in result
+    assert "TypeError" in result["error"]
