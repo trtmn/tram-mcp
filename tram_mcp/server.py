@@ -3,6 +3,27 @@ from __future__ import annotations
 import inspect
 import os
 import re
+
+import subprocess
+
+def _load_env_from_cat():
+    """Load env vars by running cat .env (triggers 1Password listener)."""
+    try:
+        result = subprocess.run(
+            ["cat", ".env"],
+            capture_output=True, text=True,
+            cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
+        if result.returncode == 0:
+            for line in result.stdout.splitlines():
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, _, value = line.partition("=")
+                    os.environ[key.strip()] = value.strip()
+    except Exception:
+        pass
+
+_load_env_from_cat()
 from typing import Any
 
 from fastmcp import FastMCP
@@ -95,14 +116,15 @@ def _get_client():
     url = os.environ.get("TESTRAIL_URL")
     username = os.environ.get("TESTRAIL_USERNAME")
     api_key = os.environ.get("TESTRAIL_API_KEY")
+    password = os.environ.get("TESTRAIL_PASSWORD")
 
     missing = []
     if not url:
         missing.append("TESTRAIL_URL")
     if not username:
         missing.append("TESTRAIL_USERNAME")
-    if not api_key:
-        missing.append("TESTRAIL_API_KEY")
+    if not api_key and not password:
+        missing.append("TESTRAIL_API_KEY or TESTRAIL_PASSWORD")
 
     if missing:
         raise EnvironmentError(
@@ -111,7 +133,12 @@ def _get_client():
         )
 
     from testrail_api_module import TestRailAPI
-    _client = TestRailAPI(base_url=url, username=username, api_key=api_key)
+    kwargs = {"base_url": url, "username": username}
+    if api_key:
+        kwargs["api_key"] = api_key
+    if password:
+        kwargs["password"] = password
+    _client = TestRailAPI(**kwargs)
     return _client
 
 

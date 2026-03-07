@@ -1,7 +1,7 @@
 """Tests for _build_catalog() correctness."""
 from __future__ import annotations
 
-from testrail_mcp.server import CATALOG
+from tram_mcp.server import CATALOG
 
 
 EXPECTED_CATEGORIES = {

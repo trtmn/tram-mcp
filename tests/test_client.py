@@ -5,7 +5,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-import testrail_mcp.server as server
+import tram_mcp.server as server
 
 
 def test_all_env_vars_missing(monkeypatch):

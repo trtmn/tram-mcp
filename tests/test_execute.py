@@ -1,7 +1,7 @@
 """Tests for the execute tool (all use mocked client)."""
 from __future__ import annotations
 
-from testrail_mcp.server import execute as _execute_tool
+from tram_mcp.server import execute as _execute_tool
 
 execute = _execute_tool.fn
 

@@ -39,6 +39,15 @@ uv run pytest -s
 uv pip install <package>
 ```
 
+## Authentication & Secrets
+
+- Credentials are managed by **1Password** via an ephemeral `.env` file at the project root.
+- The `.env` file is **not** a normal file — it requires `cat .env` to trigger the 1Password listener and materialize the contents. Python's `open()` and shell `source`/`.` **do not** trigger it.
+- The server uses `_load_env_from_cat()` in `tram_mcp/server.py` to run `cat .env` via subprocess at startup and parse the results into `os.environ`.
+- **Do NOT hardcode credentials** in `.mcp.json` — the `env` block there won't stay in sync. Let the server read from `.env` at startup.
+- Supported env vars: `TESTRAIL_URL`, `TESTRAIL_USERNAME`, `TESTRAIL_API_KEY`, `TESTRAIL_PASSWORD`. Either `TESTRAIL_API_KEY` or `TESTRAIL_PASSWORD` must be set.
+- If auth fails repeatedly, check for **account lockout** — TestRail locks accounts after too many failed attempts (~10 min cooldown).
+
 ## Architecture Goals
 
 The MCP server should:
@@ -46,6 +55,12 @@ The MCP server should:
 2. **Dynamically register MCP tools** based on discovered endpoints rather than manually defining each one
 3. **Provide a category/discovery pattern** — e.g., a `list_categories` tool that returns available API modules, and a way to invoke specific endpoints — so the LLM can explore capabilities without being flooded with hundreds of tools upfront
 4. **Pass through** to `TestRailAPI` client methods, handling authentication via environment variables or MCP configuration
+
+## TestRail Instance Notes
+
+- **URL:** `https://vermontsystems.testrail.io`
+- **Templates:** Template 1 = "Test Case (Text)" uses `custom_steps`/`custom_expected` fields. Template 2 = "Test Case (Steps)" uses `custom_steps_separated` (array of `{content, expected}`). To use separated steps, set `template_id: 2`.
+- When updating cases from Text to Steps template, you must change `template_id` in the same call.
 
 ## TestRail API Module Reference
 

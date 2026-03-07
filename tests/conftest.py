@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import testrail_mcp.server as server
+import tram_mcp.server as server
 
 
 @pytest.fixture(autouse=True)

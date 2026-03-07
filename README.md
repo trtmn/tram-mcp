@@ -1,5 +1,7 @@
 # TestRail MCP Server
 
+[![PyPI - Version](https://img.shields.io/pypi/v/tram-mcp?label=Latest%20Version)](https://pypi.org/project/tram-mcp/) [![PyPI - Downloads](https://img.shields.io/pypi/dm/tram-mcp?color=purple)](https://pypi.org/project/tram-mcp/) [![GitHub Source](https://img.shields.io/badge/github-source-blue?logo=github)](https://github.com/trtmn/tram-mcp/) [![PyPI Stats](https://img.shields.io/badge/%20%F0%9F%94%97-blue?label=📈%20Stats)](https://pypistats.org/packages/tram-mcp) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 An MCP (Model Context Protocol) server that exposes [TestRail](https://www.testrail.com/) API endpoints as tools for LLMs, built on top of [`testrail_api_module`](https://github.com/trtmn/testrail_api_module).
 
 ## Features
@@ -12,15 +14,60 @@ An MCP (Model Context Protocol) server that exposes [TestRail](https://www.testr
 - Python 3.13+
 - [uv](https://docs.astral.sh/uv/)
 
-## Setup
+## Installation
+
+### Claude Desktop
+
+Add to your Claude Desktop configuration file (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS, `%APPDATA%\Claude\claude_desktop_config.json` on Windows):
+
+```json
+{
+  "mcpServers": {
+    "testrail": {
+      "command": "uvx",
+      "args": ["tram-mcp"],
+      "env": {
+        "TESTRAIL_URL": "https://example.testrail.io",
+        "TESTRAIL_USERNAME": "your-email@example.com",
+        "TESTRAIL_API_KEY": "your-api-key"
+      }
+    }
+  }
+}
+```
+
+### Claude Code
 
 ```bash
-# Run directly via uvx (no install needed)
-uvx testrail_mcp
+claude mcp add testrail -- uvx tram-mcp
+```
 
-# Or install and run locally for development
-uv sync
-uv run testrail_mcp
+Then set the required environment variables in your shell before launching Claude Code:
+
+```bash
+export TESTRAIL_URL="https://example.testrail.io"
+export TESTRAIL_USERNAME="your-email@example.com"
+export TESTRAIL_API_KEY="your-api-key"
+```
+
+### Cursor
+
+Add to your Cursor MCP configuration file (`.cursor/mcp.json` in your project or `~/.cursor/mcp.json` globally):
+
+```json
+{
+  "mcpServers": {
+    "testrail": {
+      "command": "uvx",
+      "args": ["tram-mcp"],
+      "env": {
+        "TESTRAIL_URL": "https://example.testrail.io",
+        "TESTRAIL_USERNAME": "your-email@example.com",
+        "TESTRAIL_API_KEY": "your-api-key"
+      }
+    }
+  }
+}
 ```
 
 ## Configuration
@@ -36,6 +83,12 @@ The server requires TestRail credentials, provided via environment variables:
 ## Development
 
 ```bash
+# Install dependencies
+uv sync
+
+# Run the server locally
+uv run tram_mcp
+
 # Run tests
 uv run pytest
 

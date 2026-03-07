@@ -1,4 +1,4 @@
-from testrail_mcp import main
+from tram_mcp import main
 
 if __name__ == "__main__":
     main()
