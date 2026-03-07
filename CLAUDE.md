@@ -62,6 +62,10 @@ The MCP server should:
 - **Templates:** Template 1 = "Test Case (Text)" uses `custom_steps`/`custom_expected` fields. Template 2 = "Test Case (Steps)" uses `custom_steps_separated` (array of `{content, expected}`). To use separated steps, set `template_id: 2`.
 - When updating cases from Text to Steps template, you must change `template_id` in the same call.
 
+## Git Rules
+
+- **Never** add `Co-Authored-By` lines to commit messages.
+
 ## TestRail API Module Reference
 
 The `testrail_api_module` package (`TestRailAPI` class) organizes endpoints into submodules accessed as attributes: `api.projects.get_projects()`, `api.cases.add_case(...)`, `api.results.add_result(...)`, etc. Key modules include: projects, cases, runs, results, attachments, bdd, configurations, labels, sections, users, statuses, plans, datasets, milestones, suites, priorities.
