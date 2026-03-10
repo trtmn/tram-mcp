@@ -211,6 +211,45 @@ def get_method_info(category: str, method: str) -> dict[str, Any]:
 
 
 @mcp.tool
+def search_cases(
+    project_id: int,
+    query: str,
+    suite_id: int | None = None,
+) -> dict[str, Any]:
+    """Search for test cases by title (case-insensitive substring match).
+
+    Args:
+        project_id: The ID of the project to search in.
+        query: The search string to match against case titles.
+        suite_id: Optional suite ID to narrow the search.
+
+    Returns a dict with 'count' (total matches) and 'cases' (list of
+    matching cases with id, title, and section_id).
+    """
+    try:
+        client = _get_client()
+    except EnvironmentError as e:
+        return {"error": str(e)}
+
+    try:
+        kwargs: dict[str, Any] = {"project_id": project_id}
+        if suite_id is not None:
+            kwargs["suite_id"] = suite_id
+        all_cases = client.cases.get_cases(**kwargs)
+    except Exception as e:
+        return {"error": f"{type(e).__name__}: {e}"}
+
+    query_lower = query.lower()
+    matches = [
+        {"id": c["id"], "title": c["title"], "section_id": c.get("section_id")}
+        for c in all_cases
+        if query_lower in c.get("title", "").lower()
+    ]
+
+    return {"count": len(matches), "cases": matches}
+
+
+@mcp.tool
 def execute(category: str, method: str, params: dict[str, Any] | None = None) -> dict[str, Any] | list | str:
     """Execute a TestRail API method.
 
