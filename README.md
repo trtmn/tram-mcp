@@ -18,15 +18,7 @@ Connect your AI coding assistant to [TestRail](https://www.testrail.com/) — ma
 - Python 3.11+
 - [uv](https://docs.astral.sh/uv/)
 
-## Quick Install
-
-<a href="vscode:mcp/install?%7B%22name%22%3A%22testrail%22%2C%22type%22%3A%22stdio%22%2C%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22tram-mcp%22%5D%2C%22env%22%3A%7B%22TESTRAIL_URL%22%3A%22%22%2C%22TESTRAIL_USERNAME%22%3A%22%22%2C%22TESTRAIL_API_KEY%22%3A%22%22%7D%7D"><img src="https://img.shields.io/badge/VS_Code-Install_Server-0078d7?style=flat-square&logo=visual-studio-code" alt="Install in VS Code"></a>
-<a href="vscode-insiders:mcp/install?%7B%22name%22%3A%22testrail%22%2C%22type%22%3A%22stdio%22%2C%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22tram-mcp%22%5D%2C%22env%22%3A%7B%22TESTRAIL_URL%22%3A%22%22%2C%22TESTRAIL_USERNAME%22%3A%22%22%2C%22TESTRAIL_API_KEY%22%3A%22%22%7D%7D"><img src="https://img.shields.io/badge/VS_Code_Insiders-Install_Server-24bfa5?style=flat-square&logo=visual-studio-code" alt="Install in VS Code Insiders"></a>
-<a href="cursor://anysphere.cursor-deeplink/mcp/install?name=testrail&config=eyJjb21tYW5kIjoidXZ4IiwiYXJncyI6WyJ0cmFtLW1jcCJdLCJlbnYiOnsiVEVTVFJBSUxfVVJMIjoiIiwiVEVTVFJBSUxfVVNFUk5BTUUiOiIiLCJURVNUUkFJTF9BUElfS0VZIjoiIn19"><img src="https://img.shields.io/badge/Cursor-Install_Server-purple?style=flat-square&logo=cursor" alt="Install in Cursor"></a>
-
-After installing, you will be prompted to fill in your TestRail credentials. See [Configuration](#configuration) below.
-
-## Manual Installation
+## Installation
 
 ### Claude Desktop
 
