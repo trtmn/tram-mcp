@@ -15,9 +15,36 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    if: github.event_name == 'push' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run tests
+        run: uv run pytest
+
   tag:
     name: Create version tag
-    if: github.event_name == 'push' || github.event.pull_request.merged == true
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
