@@ -1,6 +1,8 @@
 name: Tag and release on merge to main
 
 on:
+  push:
+    branches: [main]
   pull_request:
     types: [closed]
     branches: [main]
@@ -15,7 +17,7 @@ concurrency:
 jobs:
   tag:
     name: Create version tag
-    if: github.event.pull_request.merged == true
+    if: github.event_name == 'push' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
