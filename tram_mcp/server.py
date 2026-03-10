@@ -211,13 +211,73 @@ def get_method_info(category: str, method: str) -> dict[str, Any]:
 
 
 @mcp.tool
-def execute(category: str, method: str, params: dict[str, Any] | None = None) -> dict[str, Any] | list | str:
+def search_cases(
+    project_id: int,
+    query: str,
+    suite_id: int | None = None,
+) -> dict[str, Any]:
+    """Search for test cases by title (case-insensitive substring match).
+
+    Args:
+        project_id: The ID of the project to search in.
+        query: The search string to match against case titles.
+        suite_id: Optional suite ID to narrow the search.
+
+    Returns a dict with 'count' (total matches) and 'cases' (list of
+    matching cases with id, title, and section_id).
+    """
+    try:
+        client = _get_client()
+    except EnvironmentError as e:
+        return {"error": str(e)}
+
+    try:
+        kwargs: dict[str, Any] = {"project_id": project_id}
+        if suite_id is not None:
+            kwargs["suite_id"] = suite_id
+        all_cases = client.cases.get_cases(**kwargs)
+    except Exception as e:
+        return {"error": f"{type(e).__name__}: {e}"}
+
+    query_lower = query.lower()
+    matches = [
+        {"id": c["id"], "title": c["title"], "section_id": c.get("section_id")}
+        for c in all_cases
+        if query_lower in c.get("title", "").lower()
+    ]
+
+    return {"count": len(matches), "cases": matches}
+
+
+@mcp.tool
+def execute(
+    category: str,
+    method: str,
+    params: dict[str, Any] | None = None,
+    extra_params: dict[str, Any] | None = None,
+    fields: list[str] | None = None,
+    max_results: int | None = None,
+) -> dict[str, Any] | list | str:
     """Execute a TestRail API method.
 
     Args:
         category: The API category (e.g. "projects", "cases", "runs").
         method: The method name (e.g. "get_projects", "add_case").
         params: Optional dict of parameters to pass to the method.
+        extra_params: Optional dict of additional query parameters that are
+            appended to the API request URL. Use this for filters not directly
+            supported by the method signature, such as custom field filters
+            (e.g. ``{"custom_automation_type": "1"}``).  These are merged into
+            the URL query string alongside the method's own parameters.
+        fields: Optional list of field names to include in each result item.
+            When provided and the response is a list of dicts, each dict is
+            filtered to only contain the specified keys. Useful for reducing
+            response size (e.g. ``fields=["id", "title"]``).
+        max_results: Optional maximum number of items to return. When provided
+            and the response is a list longer than this value, the list is
+            truncated and the return value becomes a dict with ``results``
+            (the truncated list), ``truncated`` (True), ``total_count``
+            (original length), and a human-readable ``message``.
 
     Requires TESTRAIL_URL, TESTRAIL_USERNAME, and TESTRAIL_API_KEY environment
     variables to be set. Use list_categories() and get_method_info() first to
@@ -247,7 +307,71 @@ def execute(category: str, method: str, params: dict[str, Any] | None = None) ->
     try:
         submodule = getattr(client, category)
         func = getattr(submodule, method)
-        result = func(**(params or {}))
-        return result if result is not None else {"status": "ok"}
+
+        if extra_params:
+            result = _call_with_extra_params(submodule, func, params or {}, extra_params)
+        else:
+            result = func(**(params or {}))
+
+        if result is None:
+            return {"status": "ok"}
+
+        # Post-process list responses
+        if isinstance(result, list):
+            # Field filtering
+            if fields is not None:
+                result = [
+                    {k: v for k, v in item.items() if k in fields}
+                    if isinstance(item, dict)
+                    else item
+                    for item in result
+                ]
+
+            # Truncation
+            if max_results is not None and len(result) > max_results:
+                total_count = len(result)
+                return {
+                    "results": result[:max_results],
+                    "truncated": True,
+                    "total_count": total_count,
+                    "message": (
+                        f"Results truncated: showing {max_results} of "
+                        f"{total_count} items. Use max_results or refine "
+                        f"your query to retrieve more."
+                    ),
+                }
+
+        return result
     except Exception as e:
         return {"error": f"{type(e).__name__}: {e}"}
+
+
+def _call_with_extra_params(
+    submodule: Any,
+    func: Any,
+    params: dict[str, Any],
+    extra_params: dict[str, Any],
+) -> Any:
+    """Call *func* while injecting *extra_params* into the HTTP query string.
+
+    The testrail_api_module methods build their query string inside
+    ``BaseAPI._build_url``.  We temporarily wrap that method so that the
+    extra parameters are appended to every URL built during the call.
+    """
+    from urllib.parse import urlencode
+
+    original_build_url = submodule._build_url
+
+    def _patched_build_url(endpoint, params=None):
+        url = original_build_url(endpoint, params)
+        filtered = {k: str(v) for k, v in extra_params.items() if v is not None}
+        if filtered:
+            separator = "&" if "?" in url else "?"
+            url += f"{separator}{urlencode(filtered)}"
+        return url
+
+    submodule._build_url = _patched_build_url
+    try:
+        return func(**params)
+    finally:
+        submodule._build_url = original_build_url
