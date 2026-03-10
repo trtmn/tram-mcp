@@ -66,9 +66,16 @@ The MCP server should:
 
 - **Never** add `Co-Authored-By` lines to commit messages.
 
+## Branching Strategy
+
+- **`main`** — production branch. Releases are cut and published from here. Never commit directly to main.
+- **`dev`** — integration branch. All feature work merges here first via PR.
+- **Feature branches** — branch from `dev`, do the work, open a PR back into `dev`.
+- When `dev` is stable and ready for release, open a PR from `dev` → `main`.
+
 ## Releasing
 
-- Merging a PR to `main` auto-tags and publishes to PyPI via GitHub Actions.
+- Merging a PR (or pushing) to `main` auto-tags and publishes to PyPI via GitHub Actions.
 - **Always bump the version** (`uv version X.Y.Z`) before merging to main. If the version isn't bumped, the publish is skipped.
 - A manual publish fallback exists via the "Publish Package (manual)" workflow in GitHub Actions.
 
