@@ -21,7 +21,6 @@ classifiers = [
 ]
 dependencies = [
     "fastmcp>=2.12.4",
-    "python-dotenv>=1.1.1",
     "testrail-api-module==0.7.0",
 ]
 

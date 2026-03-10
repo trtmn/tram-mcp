@@ -1,18 +1,22 @@
 from __future__ import annotations
 
 import inspect
+import logging
 import os
 import re
+import sys
+from typing import Any
 
-import subprocess
 
 def _load_env_from_cat():
     """Load env vars by running cat .env (triggers 1Password listener)."""
     try:
+        import subprocess
+
         result = subprocess.run(
             ["cat", ".env"],
             capture_output=True, text=True,
-            cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            cwd=os.getcwd()
         )
         if result.returncode == 0:
             for line in result.stdout.splitlines():
@@ -25,9 +29,7 @@ def _load_env_from_cat():
 
 _load_env_from_cat()
 
-import sys  # noqa: E402
-from typing import Any  # noqa: E402
-
+logging.getLogger("fastmcp").setLevel(logging.WARNING)
 from fastmcp import FastMCP  # noqa: E402
 
 
