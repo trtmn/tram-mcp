@@ -1,8 +1,12 @@
 # TestRail MCP Server
 
-[![Tests](https://github.com/trtmn/tram-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/trtmn/tram-mcp/actions/workflows/tests.yml) [![Python 3.11 | 3.12 | 3.13](https://img.shields.io/badge/python-3.11%20|%203.12%20|%203.13-blue?logo=python&logoColor=white)](https://pypi.org/project/tram-mcp/) [![PyPI - Version](https://img.shields.io/pypi/v/tram-mcp?label=Latest%20Version)](https://pypi.org/project/tram-mcp/) [![PyPI - Downloads](https://img.shields.io/pypi/dm/tram-mcp?color=purple)](https://pypi.org/project/tram-mcp/) [![GitHub Source](https://img.shields.io/badge/github-source-blue?logo=github)](https://github.com/trtmn/tram-mcp/) [![PyPI Stats](https://img.shields.io/badge/%20%F0%9F%94%97-blue?label=📈%20Stats)](https://pypistats.org/packages/tram-mcp) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://github.com/trtmn/tram-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/trtmn/tram-mcp/actions/workflows/tests.yml)
+[![Python 3.11 | 3.12 | 3.13](https://img.shields.io/badge/python-3.11%20|%203.12%20|%203.13-blue?logo=python&logoColor=white)](https://pypi.org/project/tram-mcp/)
+[![PyPI - Version](https://img.shields.io/pypi/v/tram-mcp?label=Latest%20Version)](https://pypi.org/project/tram-mcp/)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/tram-mcp?color=purple)](https://pypi.org/project/tram-mcp/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-An MCP (Model Context Protocol) server that exposes [TestRail](https://www.testrail.com/) API endpoints as tools for LLMs, built on top of [`testrail_api_module`](https://github.com/trtmn/testrail_api_module).
+Connect your AI coding assistant to [TestRail](https://www.testrail.com/) — manage test cases, runs, results, and more directly from VS Code, Cursor, Claude Desktop, or Claude Code. Built on the [Model Context Protocol](https://modelcontextprotocol.io/) and powered by [`testrail_api_module`](https://github.com/trtmn/testrail_api_module).
 
 ## Features
 
@@ -16,9 +20,9 @@ An MCP (Model Context Protocol) server that exposes [TestRail](https://www.testr
 
 ## Quick Install
 
-Click a button to install in your preferred tool:
-
-[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_Server-0078d7?style=flat-square&logo=visual-studio-code)](vscode:mcp/install?%7B%22name%22%3A%22testrail%22%2C%22type%22%3A%22stdio%22%2C%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22tram-mcp%22%5D%2C%22env%22%3A%7B%22TESTRAIL_URL%22%3A%22%22%2C%22TESTRAIL_USERNAME%22%3A%22%22%2C%22TESTRAIL_API_KEY%22%3A%22%22%7D%7D) [![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Server-24bfa5?style=flat-square&logo=visual-studio-code)](vscode-insiders:mcp/install?%7B%22name%22%3A%22testrail%22%2C%22type%22%3A%22stdio%22%2C%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22tram-mcp%22%5D%2C%22env%22%3A%7B%22TESTRAIL_URL%22%3A%22%22%2C%22TESTRAIL_USERNAME%22%3A%22%22%2C%22TESTRAIL_API_KEY%22%3A%22%22%7D%7D) [![Install in Cursor](https://img.shields.io/badge/Cursor-Install_Server-purple?style=flat-square&logo=cursor)](cursor://anysphere.cursor-deeplink/mcp/install?name=testrail&config=eyJjb21tYW5kIjoidXZ4IiwiYXJncyI6WyJ0cmFtLW1jcCJdLCJlbnYiOnsiVEVTVFJBSUxfVVJMIjoiIiwiVEVTVFJBSUxfVVNFUk5BTUUiOiIiLCJURVNUUkFJTF9BUElfS0VZIjoiIn19)
+<a href="vscode:mcp/install?%7B%22name%22%3A%22testrail%22%2C%22type%22%3A%22stdio%22%2C%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22tram-mcp%22%5D%2C%22env%22%3A%7B%22TESTRAIL_URL%22%3A%22%22%2C%22TESTRAIL_USERNAME%22%3A%22%22%2C%22TESTRAIL_API_KEY%22%3A%22%22%7D%7D"><img src="https://img.shields.io/badge/VS_Code-Install_Server-0078d7?style=flat-square&logo=visual-studio-code" alt="Install in VS Code"></a>
+<a href="vscode-insiders:mcp/install?%7B%22name%22%3A%22testrail%22%2C%22type%22%3A%22stdio%22%2C%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22tram-mcp%22%5D%2C%22env%22%3A%7B%22TESTRAIL_URL%22%3A%22%22%2C%22TESTRAIL_USERNAME%22%3A%22%22%2C%22TESTRAIL_API_KEY%22%3A%22%22%7D%7D"><img src="https://img.shields.io/badge/VS_Code_Insiders-Install_Server-24bfa5?style=flat-square&logo=visual-studio-code" alt="Install in VS Code Insiders"></a>
+<a href="cursor://anysphere.cursor-deeplink/mcp/install?name=testrail&config=eyJjb21tYW5kIjoidXZ4IiwiYXJncyI6WyJ0cmFtLW1jcCJdLCJlbnYiOnsiVEVTVFJBSUxfVVJMIjoiIiwiVEVTVFJBSUxfVVNFUk5BTUUiOiIiLCJURVNUUkFJTF9BUElfS0VZIjoiIn19"><img src="https://img.shields.io/badge/Cursor-Install_Server-purple?style=flat-square&logo=cursor" alt="Install in Cursor"></a>
 
 After installing, you will be prompted to fill in your TestRail credentials. See [Configuration](#configuration) below.
 
