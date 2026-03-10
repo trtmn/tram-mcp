@@ -1328,7 +1328,6 @@ version = "0.1.1"
 source = { editable = "." }
 dependencies = [
     { name = "fastmcp" },
-    { name = "python-dotenv" },
     { name = "testrail-api-module" },
 ]
 
@@ -1340,7 +1339,6 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastmcp", specifier = ">=2.12.4" },
-    { name = "python-dotenv", specifier = ">=1.1.1" },
     { name = "testrail-api-module", specifier = "==0.7.0" },
 ]
 
