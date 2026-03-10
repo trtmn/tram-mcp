@@ -216,6 +216,8 @@ def execute(
     method: str,
     params: dict[str, Any] | None = None,
     extra_params: dict[str, Any] | None = None,
+    fields: list[str] | None = None,
+    max_results: int | None = None,
 ) -> dict[str, Any] | list | str:
     """Execute a TestRail API method.
 
@@ -228,6 +230,15 @@ def execute(
             supported by the method signature, such as custom field filters
             (e.g. ``{"custom_automation_type": "1"}``).  These are merged into
             the URL query string alongside the method's own parameters.
+        fields: Optional list of field names to include in each result item.
+            When provided and the response is a list of dicts, each dict is
+            filtered to only contain the specified keys. Useful for reducing
+            response size (e.g. ``fields=["id", "title"]``).
+        max_results: Optional maximum number of items to return. When provided
+            and the response is a list longer than this value, the list is
+            truncated and the return value becomes a dict with ``results``
+            (the truncated list), ``truncated`` (True), ``total_count``
+            (original length), and a human-readable ``message``.
 
     Requires TESTRAIL_URL, TESTRAIL_USERNAME, and TESTRAIL_API_KEY environment
     variables to be set. Use list_categories() and get_method_info() first to
@@ -263,7 +274,35 @@ def execute(
         else:
             result = func(**(params or {}))
 
-        return result if result is not None else {"status": "ok"}
+        if result is None:
+            return {"status": "ok"}
+
+        # Post-process list responses
+        if isinstance(result, list):
+            # Field filtering
+            if fields is not None:
+                result = [
+                    {k: v for k, v in item.items() if k in fields}
+                    if isinstance(item, dict)
+                    else item
+                    for item in result
+                ]
+
+            # Truncation
+            if max_results is not None and len(result) > max_results:
+                total_count = len(result)
+                return {
+                    "results": result[:max_results],
+                    "truncated": True,
+                    "total_count": total_count,
+                    "message": (
+                        f"Results truncated: showing {max_results} of "
+                        f"{total_count} items. Use max_results or refine "
+                        f"your query to retrieve more."
+                    ),
+                }
+
+        return result
     except Exception as e:
         return {"error": f"{type(e).__name__}: {e}"}
 

@@ -214,3 +214,99 @@ def test_extra_params_with_no_regular_params(mock_client):
     )
     assert result == [{"id": 1}]
     mock_client.cases.get_cases.assert_called_once_with()
+
+
+# ---------------------------------------------------------------------------
+# fields filtering
+# ---------------------------------------------------------------------------
+
+
+def test_fields_filters_list_of_dicts(mock_client):
+    mock_client.cases.get_cases.return_value = [
+        {"id": 1, "title": "Login", "custom_steps": "long text..."},
+        {"id": 2, "title": "Logout", "custom_steps": "more text..."},
+    ]
+    result = execute("cases", "get_cases", fields=["id", "title"])
+    assert result == [
+        {"id": 1, "title": "Login"},
+        {"id": 2, "title": "Logout"},
+    ]
+
+
+def test_fields_with_missing_key(mock_client):
+    """Keys not present in the original dict are simply absent."""
+    mock_client.cases.get_cases.return_value = [
+        {"id": 1, "title": "Login"},
+    ]
+    result = execute("cases", "get_cases", fields=["id", "nonexistent"])
+    assert result == [{"id": 1}]
+
+
+def test_fields_ignored_for_non_list(mock_client):
+    mock_client.projects.get_project.return_value = {"id": 1, "name": "P"}
+    result = execute("projects", "get_project", params={"project_id": 1}, fields=["id"])
+    assert result == {"id": 1, "name": "P"}
+
+
+def test_fields_skips_non_dict_items(mock_client):
+    """Non-dict items in a list are left unchanged."""
+    mock_client.projects.get_projects.return_value = ["a", "b"]
+    result = execute("projects", "get_projects", fields=["id"])
+    assert result == ["a", "b"]
+
+
+# ---------------------------------------------------------------------------
+# max_results truncation
+# ---------------------------------------------------------------------------
+
+
+def test_max_results_truncates(mock_client):
+    items = [{"id": i} for i in range(10)]
+    mock_client.projects.get_projects.return_value = items
+    result = execute("projects", "get_projects", max_results=3)
+    assert result["truncated"] is True
+    assert result["total_count"] == 10
+    assert len(result["results"]) == 3
+    assert result["results"] == [{"id": 0}, {"id": 1}, {"id": 2}]
+    assert "3 of 10" in result["message"]
+
+
+def test_max_results_no_truncation_when_under_limit(mock_client):
+    items = [{"id": 1}, {"id": 2}]
+    mock_client.projects.get_projects.return_value = items
+    result = execute("projects", "get_projects", max_results=5)
+    # Should return the list as-is, not a truncation wrapper
+    assert result == [{"id": 1}, {"id": 2}]
+
+
+def test_max_results_exact_match(mock_client):
+    items = [{"id": i} for i in range(3)]
+    mock_client.projects.get_projects.return_value = items
+    result = execute("projects", "get_projects", max_results=3)
+    assert result == items
+
+
+def test_max_results_ignored_for_non_list(mock_client):
+    mock_client.projects.get_project.return_value = {"id": 1}
+    result = execute("projects", "get_project", params={"project_id": 1}, max_results=1)
+    assert result == {"id": 1}
+
+
+# ---------------------------------------------------------------------------
+# fields + max_results combined
+# ---------------------------------------------------------------------------
+
+
+def test_fields_and_max_results_combined(mock_client):
+    items = [
+        {"id": i, "title": f"Case {i}", "custom_steps": "long..."}
+        for i in range(20)
+    ]
+    mock_client.cases.get_cases.return_value = items
+    result = execute("cases", "get_cases", fields=["id", "title"], max_results=2)
+    assert result["truncated"] is True
+    assert result["total_count"] == 20
+    assert len(result["results"]) == 2
+    # Fields should be filtered in the truncated results
+    assert result["results"][0] == {"id": 0, "title": "Case 0"}
+    assert result["results"][1] == {"id": 1, "title": "Case 1"}
