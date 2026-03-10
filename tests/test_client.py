@@ -12,6 +12,7 @@ def test_all_env_vars_missing(monkeypatch):
     monkeypatch.delenv("TESTRAIL_URL", raising=False)
     monkeypatch.delenv("TESTRAIL_USERNAME", raising=False)
     monkeypatch.delenv("TESTRAIL_API_KEY", raising=False)
+    monkeypatch.delenv("TESTRAIL_PASSWORD", raising=False)
     with pytest.raises(EnvironmentError, match="TESTRAIL_URL"):
         server._get_client()
 
@@ -20,6 +21,7 @@ def test_single_env_var_missing(monkeypatch):
     monkeypatch.setenv("TESTRAIL_URL", "https://example.testrail.io")
     monkeypatch.setenv("TESTRAIL_USERNAME", "user@example.com")
     monkeypatch.delenv("TESTRAIL_API_KEY", raising=False)
+    monkeypatch.delenv("TESTRAIL_PASSWORD", raising=False)
     with pytest.raises(EnvironmentError, match="TESTRAIL_API_KEY") as exc_info:
         server._get_client()
     # Should NOT mention the ones that are set
@@ -31,6 +33,7 @@ def test_empty_string_treated_as_missing(monkeypatch):
     monkeypatch.setenv("TESTRAIL_URL", "")
     monkeypatch.setenv("TESTRAIL_USERNAME", "user@example.com")
     monkeypatch.setenv("TESTRAIL_API_KEY", "key123")
+    monkeypatch.delenv("TESTRAIL_PASSWORD", raising=False)
     with pytest.raises(EnvironmentError, match="TESTRAIL_URL"):
         server._get_client()
 
@@ -50,6 +53,7 @@ def test_client_created_with_correct_args(monkeypatch):
     monkeypatch.setenv("TESTRAIL_URL", "https://my.testrail.io")
     monkeypatch.setenv("TESTRAIL_USERNAME", "admin@test.com")
     monkeypatch.setenv("TESTRAIL_API_KEY", "secret123")
+    monkeypatch.delenv("TESTRAIL_PASSWORD", raising=False)
     mock_api = MagicMock()
     with patch("testrail_api_module.TestRailAPI", return_value=mock_api) as mock_cls:
         client = server._get_client()

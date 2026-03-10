@@ -1,6 +1,6 @@
 # TestRail MCP Server
 
-[![PyPI - Version](https://img.shields.io/pypi/v/tram-mcp?label=Latest%20Version)](https://pypi.org/project/tram-mcp/) [![PyPI - Downloads](https://img.shields.io/pypi/dm/tram-mcp?color=purple)](https://pypi.org/project/tram-mcp/) [![GitHub Source](https://img.shields.io/badge/github-source-blue?logo=github)](https://github.com/trtmn/tram-mcp/) [![PyPI Stats](https://img.shields.io/badge/%20%F0%9F%94%97-blue?label=📈%20Stats)](https://pypistats.org/packages/tram-mcp) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://github.com/trtmn/tram-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/trtmn/tram-mcp/actions/workflows/tests.yml) [![Python 3.11 | 3.12 | 3.13](https://img.shields.io/badge/python-3.11%20|%203.12%20|%203.13-blue?logo=python&logoColor=white)](https://pypi.org/project/tram-mcp/) [![PyPI - Version](https://img.shields.io/pypi/v/tram-mcp?label=Latest%20Version)](https://pypi.org/project/tram-mcp/) [![PyPI - Downloads](https://img.shields.io/pypi/dm/tram-mcp?color=purple)](https://pypi.org/project/tram-mcp/) [![GitHub Source](https://img.shields.io/badge/github-source-blue?logo=github)](https://github.com/trtmn/tram-mcp/) [![PyPI Stats](https://img.shields.io/badge/%20%F0%9F%94%97-blue?label=📈%20Stats)](https://pypistats.org/packages/tram-mcp) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 An MCP (Model Context Protocol) server that exposes [TestRail](https://www.testrail.com/) API endpoints as tools for LLMs, built on top of [`testrail_api_module`](https://github.com/trtmn/testrail_api_module).
 
@@ -11,14 +11,25 @@ An MCP (Model Context Protocol) server that exposes [TestRail](https://www.testr
 
 ## Requirements
 
-- Python 3.13+
+- Python 3.11+
 - [uv](https://docs.astral.sh/uv/)
 
-## Installation
+## Quick Install
+
+Click a button to install in your preferred tool:
+
+[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_Server-0078d7?style=flat-square&logo=visual-studio-code)](vscode:mcp/install?%7B%22name%22%3A%22testrail%22%2C%22type%22%3A%22stdio%22%2C%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22tram-mcp%22%5D%2C%22env%22%3A%7B%22TESTRAIL_URL%22%3A%22%22%2C%22TESTRAIL_USERNAME%22%3A%22%22%2C%22TESTRAIL_API_KEY%22%3A%22%22%7D%7D) [![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Server-24bfa5?style=flat-square&logo=visual-studio-code)](vscode-insiders:mcp/install?%7B%22name%22%3A%22testrail%22%2C%22type%22%3A%22stdio%22%2C%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22tram-mcp%22%5D%2C%22env%22%3A%7B%22TESTRAIL_URL%22%3A%22%22%2C%22TESTRAIL_USERNAME%22%3A%22%22%2C%22TESTRAIL_API_KEY%22%3A%22%22%7D%7D) [![Install in Cursor](https://img.shields.io/badge/Cursor-Install_Server-purple?style=flat-square&logo=cursor)](cursor://anysphere.cursor-deeplink/mcp/install?name=testrail&config=eyJjb21tYW5kIjoidXZ4IiwiYXJncyI6WyJ0cmFtLW1jcCJdLCJlbnYiOnsiVEVTVFJBSUxfVVJMIjoiIiwiVEVTVFJBSUxfVVNFUk5BTUUiOiIiLCJURVNUUkFJTF9BUElfS0VZIjoiIn19)
+
+After installing, you will be prompted to fill in your TestRail credentials. See [Configuration](#configuration) below.
+
+## Manual Installation
 
 ### Claude Desktop
 
-Add to your Claude Desktop configuration file (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS, `%APPDATA%\Claude\claude_desktop_config.json` on Windows):
+Add to your Claude Desktop config file:
+
+- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
@@ -27,7 +38,7 @@ Add to your Claude Desktop configuration file (`~/Library/Application Support/Cl
       "command": "uvx",
       "args": ["tram-mcp"],
       "env": {
-        "TESTRAIL_URL": "https://example.testrail.io",
+        "TESTRAIL_URL": "https://yourinstance.testrail.io",
         "TESTRAIL_USERNAME": "your-email@example.com",
         "TESTRAIL_API_KEY": "your-api-key"
       }
@@ -39,20 +50,39 @@ Add to your Claude Desktop configuration file (`~/Library/Application Support/Cl
 ### Claude Code
 
 ```bash
-claude mcp add testrail -- uvx tram-mcp
+claude mcp add testrail \
+  -e TESTRAIL_URL=https://yourinstance.testrail.io \
+  -e TESTRAIL_USERNAME=your-email@example.com \
+  -e TESTRAIL_API_KEY=your-api-key \
+  -- uvx tram-mcp
 ```
 
-Then set the required environment variables in your shell before launching Claude Code:
+### VS Code / VS Code Insiders
 
-```bash
-export TESTRAIL_URL="https://example.testrail.io"
-export TESTRAIL_USERNAME="your-email@example.com"
-export TESTRAIL_API_KEY="your-api-key"
+Create `.vscode/mcp.json` in your project (or add to your User Settings):
+
+```json
+{
+  "servers": {
+    "testrail": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["tram-mcp"],
+      "env": {
+        "TESTRAIL_URL": "",
+        "TESTRAIL_USERNAME": "",
+        "TESTRAIL_API_KEY": ""
+      }
+    }
+  }
+}
 ```
+
+VS Code supports `${input:variableName}` placeholders to prompt for values at startup.
 
 ### Cursor
 
-Add to your Cursor MCP configuration file (`.cursor/mcp.json` in your project or `~/.cursor/mcp.json` globally):
+Create `.cursor/mcp.json` in your project (or `~/.cursor/mcp.json` globally):
 
 ```json
 {
@@ -61,7 +91,7 @@ Add to your Cursor MCP configuration file (`.cursor/mcp.json` in your project or
       "command": "uvx",
       "args": ["tram-mcp"],
       "env": {
-        "TESTRAIL_URL": "https://example.testrail.io",
+        "TESTRAIL_URL": "https://yourinstance.testrail.io",
         "TESTRAIL_USERNAME": "your-email@example.com",
         "TESTRAIL_API_KEY": "your-api-key"
       }
@@ -72,13 +102,16 @@ Add to your Cursor MCP configuration file (`.cursor/mcp.json` in your project or
 
 ## Configuration
 
-The server requires TestRail credentials, provided via environment variables:
+The server requires TestRail credentials via environment variables:
 
-| Variable | Description |
-|---|---|
-| `TESTRAIL_URL` | Your TestRail instance URL (e.g. `https://example.testrail.io`) |
-| `TESTRAIL_USERNAME` | TestRail username or email |
-| `TESTRAIL_API_KEY` | TestRail API key |
+| Variable | Required | Description |
+|---|---|---|
+| `TESTRAIL_URL` | Yes | Your TestRail instance URL (e.g. `https://example.testrail.io`) |
+| `TESTRAIL_USERNAME` | Yes | TestRail username or email |
+| `TESTRAIL_API_KEY` | Yes* | TestRail API key |
+| `TESTRAIL_PASSWORD` | Yes* | TestRail password (alternative to API key) |
+
+*Either `TESTRAIL_API_KEY` or `TESTRAIL_PASSWORD` must be set. API key is recommended.
 
 ## Development
 

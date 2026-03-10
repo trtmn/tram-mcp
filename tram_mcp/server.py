@@ -24,9 +24,33 @@ def _load_env_from_cat():
         pass
 
 _load_env_from_cat()
-from typing import Any
 
-from fastmcp import FastMCP
+import sys  # noqa: E402
+from typing import Any  # noqa: E402
+
+from fastmcp import FastMCP  # noqa: E402
+
+
+def _check_env() -> str | None:
+    """Check for required env vars. Returns error message or None if OK."""
+    missing = []
+    if not os.environ.get("TESTRAIL_URL"):
+        missing.append("TESTRAIL_URL")
+    if not os.environ.get("TESTRAIL_USERNAME"):
+        missing.append("TESTRAIL_USERNAME")
+    if not os.environ.get("TESTRAIL_API_KEY") and not os.environ.get("TESTRAIL_PASSWORD"):
+        missing.append("TESTRAIL_API_KEY or TESTRAIL_PASSWORD")
+    if missing:
+        return (
+            f"Missing required environment variables: {', '.join(missing)}. "
+            "Set these to connect to your TestRail instance."
+        )
+    return None
+
+
+_ENV_ERROR = _check_env()
+if _ENV_ERROR:
+    print(f"[tram-mcp] ERROR: {_ENV_ERROR}", file=sys.stderr)
 
 # ---------------------------------------------------------------------------
 # Catalog builder – runs at import time, no credentials needed
@@ -113,26 +137,16 @@ def _get_client():
     if _client is not None:
         return _client
 
-    url = os.environ.get("TESTRAIL_URL")
-    username = os.environ.get("TESTRAIL_USERNAME")
+    env_error = _check_env()
+    if env_error:
+        raise EnvironmentError(env_error)
+
+    from testrail_api_module import TestRailAPI
+    url = os.environ["TESTRAIL_URL"]
+    username = os.environ["TESTRAIL_USERNAME"]
     api_key = os.environ.get("TESTRAIL_API_KEY")
     password = os.environ.get("TESTRAIL_PASSWORD")
 
-    missing = []
-    if not url:
-        missing.append("TESTRAIL_URL")
-    if not username:
-        missing.append("TESTRAIL_USERNAME")
-    if not api_key and not password:
-        missing.append("TESTRAIL_API_KEY or TESTRAIL_PASSWORD")
-
-    if missing:
-        raise EnvironmentError(
-            f"Missing required environment variables: {', '.join(missing)}. "
-            "Set these to connect to your TestRail instance."
-        )
-
-    from testrail_api_module import TestRailAPI
     kwargs = {"base_url": url, "username": username}
     if api_key:
         kwargs["api_key"] = api_key

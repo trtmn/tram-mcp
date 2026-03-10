@@ -23,6 +23,7 @@ def test_missing_env_vars(monkeypatch):
     monkeypatch.delenv("TESTRAIL_URL", raising=False)
     monkeypatch.delenv("TESTRAIL_USERNAME", raising=False)
     monkeypatch.delenv("TESTRAIL_API_KEY", raising=False)
+    monkeypatch.delenv("TESTRAIL_PASSWORD", raising=False)
     # _client is None (reset by autouse fixture), so execute will try _get_client()
     result = execute("projects", "get_projects")
     assert "error" in result

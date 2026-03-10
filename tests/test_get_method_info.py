@@ -1,7 +1,7 @@
 """Tests for the get_method_info tool."""
 from __future__ import annotations
 
-from tram_mcp.server import CATALOG, get_method_info as _get_method_info_tool
+from tram_mcp.server import get_method_info as _get_method_info_tool
 
 get_method_info = _get_method_info_tool.fn
 
