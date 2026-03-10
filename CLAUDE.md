@@ -66,6 +66,12 @@ The MCP server should:
 
 - **Never** add `Co-Authored-By` lines to commit messages.
 
+## Releasing
+
+- Merging a PR to `main` auto-tags and publishes to PyPI via GitHub Actions.
+- **Always bump the version** (`uv version X.Y.Z`) before merging to main. If the version isn't bumped, the publish is skipped.
+- A manual publish fallback exists via the "Publish Package (manual)" workflow in GitHub Actions.
+
 ## TestRail API Module Reference
 
 The `testrail_api_module` package (`TestRailAPI` class) organizes endpoints into submodules accessed as attributes: `api.projects.get_projects()`, `api.cases.add_case(...)`, `api.results.add_result(...)`, etc. Key modules include: projects, cases, runs, results, attachments, bdd, configurations, labels, sections, users, statuses, plans, datasets, milestones, suites, priorities.

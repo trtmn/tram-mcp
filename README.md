@@ -133,6 +133,16 @@ uv run pytest
 uv run pytest path/to/test.py::test_name -v
 ```
 
+### Releasing
+
+Merging a PR to `main` automatically tags the version and publishes to PyPI. **You must bump the version before merging:**
+
+```bash
+uv version 0.2.0  # update version in pyproject.toml
+```
+
+If you forget to bump, the publish will be skipped (the existing version tag already exists on PyPI).
+
 ## License
 
 MIT
