@@ -211,13 +211,23 @@ def get_method_info(category: str, method: str) -> dict[str, Any]:
 
 
 @mcp.tool
-def execute(category: str, method: str, params: dict[str, Any] | None = None) -> dict[str, Any] | list | str:
+def execute(
+    category: str,
+    method: str,
+    params: dict[str, Any] | None = None,
+    extra_params: dict[str, Any] | None = None,
+) -> dict[str, Any] | list | str:
     """Execute a TestRail API method.
 
     Args:
         category: The API category (e.g. "projects", "cases", "runs").
         method: The method name (e.g. "get_projects", "add_case").
         params: Optional dict of parameters to pass to the method.
+        extra_params: Optional dict of additional query parameters that are
+            appended to the API request URL. Use this for filters not directly
+            supported by the method signature, such as custom field filters
+            (e.g. ``{"custom_automation_type": "1"}``).  These are merged into
+            the URL query string alongside the method's own parameters.
 
     Requires TESTRAIL_URL, TESTRAIL_USERNAME, and TESTRAIL_API_KEY environment
     variables to be set. Use list_categories() and get_method_info() first to
@@ -247,7 +257,43 @@ def execute(category: str, method: str, params: dict[str, Any] | None = None) ->
     try:
         submodule = getattr(client, category)
         func = getattr(submodule, method)
-        result = func(**(params or {}))
+
+        if extra_params:
+            result = _call_with_extra_params(submodule, func, params or {}, extra_params)
+        else:
+            result = func(**(params or {}))
+
         return result if result is not None else {"status": "ok"}
     except Exception as e:
         return {"error": f"{type(e).__name__}: {e}"}
+
+
+def _call_with_extra_params(
+    submodule: Any,
+    func: Any,
+    params: dict[str, Any],
+    extra_params: dict[str, Any],
+) -> Any:
+    """Call *func* while injecting *extra_params* into the HTTP query string.
+
+    The testrail_api_module methods build their query string inside
+    ``BaseAPI._build_url``.  We temporarily wrap that method so that the
+    extra parameters are appended to every URL built during the call.
+    """
+    from urllib.parse import urlencode
+
+    original_build_url = submodule._build_url
+
+    def _patched_build_url(endpoint, params=None):
+        url = original_build_url(endpoint, params)
+        filtered = {k: str(v) for k, v in extra_params.items() if v is not None}
+        if filtered:
+            separator = "&" if "?" in url else "?"
+            url += f"{separator}{urlencode(filtered)}"
+        return url
+
+    submodule._build_url = _patched_build_url
+    try:
+        return func(**params)
+    finally:
+        submodule._build_url = original_build_url
