@@ -1,4 +1,5 @@
 name: Publish Package (manual)
+run-name: "Publish Package (manual)"
 
 on:
   workflow_dispatch:
