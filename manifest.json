@@ -1,7 +1,7 @@
 {
   "manifest_version": "0.3",
   "name": "tram-mcp",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "display_name": "TestRail MCP",
   "description": "Connect Claude to your TestRail instance. Browse projects, search test cases, manage runs and results — all through natural language. Requires Python 3.11+.",
   "author": {
@@ -19,8 +19,8 @@
     "type": "python",
     "entry_point": "main.py",
     "mcp_config": {
-      "command": "uv",
-      "args": ["run", "--directory", "${__dirname}", "python", "main.py"],
+      "command": "uvx",
+      "args": ["tram-mcp"],
       "env": {
         "TESTRAIL_URL": "${user_config.testrail_url}",
         "TESTRAIL_USERNAME": "${user_config.testrail_username}",
