@@ -1,0 +1,70 @@
+{
+  "manifest_version": "0.3",
+  "name": "tram-mcp",
+  "version": "0.4.3",
+  "display_name": "TestRail MCP",
+  "description": "Connect Claude to your TestRail instance. Browse projects, search test cases, manage runs and results — all through natural language. Requires Python 3.11+.",
+  "author": {
+    "name": "Vermont Systems",
+    "url": "https://github.com/trtmn/tram-mcp"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/trtmn/tram-mcp"
+  },
+  "documentation": "https://github.com/trtmn/tram-mcp#readme",
+  "keywords": ["testrail", "testing", "qa", "test-management", "mcp"],
+  "server": {
+    "type": "python",
+    "entry_point": "main.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": ["run", "--directory", "${__dirname}", "python", "main.py"],
+      "env": {
+        "TESTRAIL_URL": "${user_config.testrail_url}",
+        "TESTRAIL_USERNAME": "${user_config.testrail_username}",
+        "TESTRAIL_PASSWORD": "${user_config.testrail_password}"
+      }
+    }
+  },
+  "user_config": {
+    "testrail_url": {
+      "type": "string",
+      "title": "TestRail URL",
+      "description": "Your TestRail instance URL (e.g., https://yourcompany.testrail.io)",
+      "required": true
+    },
+    "testrail_username": {
+      "type": "string",
+      "title": "TestRail Username",
+      "description": "Your TestRail email address",
+      "required": true
+    },
+    "testrail_password": {
+      "type": "string",
+      "title": "TestRail Password",
+      "description": "Your TestRail account password",
+      "required": true,
+      "sensitive": true
+    }
+  },
+  "tools": [
+    {
+      "name": "browse_testrail_api",
+      "description": "Browse all available TestRail API categories and their methods"
+    },
+    {
+      "name": "describe_testrail_method",
+      "description": "Describe a specific TestRail API method — its parameters, types, and docs"
+    },
+    {
+      "name": "search_test_cases",
+      "description": "Search for test cases by title within a project"
+    },
+    {
+      "name": "run_testrail_command",
+      "description": "Run any TestRail API command (projects, cases, runs, results, etc.)"
+    }
+  ]
+}

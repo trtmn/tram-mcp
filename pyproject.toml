@@ -1,9 +1,9 @@
 [project]
 name = "tram-mcp"
-version = "0.3.1"
+version = "0.4.3"
 description = "MCP server exposing TestRail API endpoints as tools for LLMs"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.14"
 license = "MIT"
 authors = [
     { name = "Matt Troutman", email = "git@trtmn.com" },
@@ -20,7 +20,7 @@ classifiers = [
     "Topic :: Software Development :: Testing",
 ]
 dependencies = [
-    "fastmcp>=2.12.4",
+    "fastmcp>=2.12.4,<4",
     "testrail-api-module==0.7.0",
 ]
 

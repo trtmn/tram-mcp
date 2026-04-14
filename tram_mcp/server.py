@@ -5,29 +5,50 @@ import logging
 import os
 import re
 import sys
+from pathlib import Path
 from typing import Any
 
 
-def _load_env_from_cat():
-    """Load env vars by running cat .env (triggers 1Password listener)."""
-    try:
-        import subprocess
+def _load_env():
+    """Load env vars from .env if present.
 
-        result = subprocess.run(
-            ["cat", ".env"],
-            capture_output=True, text=True,
-            cwd=os.getcwd()
-        )
-        if result.returncode == 0:
-            for line in result.stdout.splitlines():
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    key, _, value = line.partition("=")
-                    os.environ[key.strip()] = value.strip()
+    Supports both regular .env files and 1Password FIFO named pipes.
+    FIFO pipes only serve data once per open(), so we read via a stream
+    rather than letting load_dotenv re-open the path internally.
+    For FIFOs, we use a timeout to avoid blocking indefinitely (e.g. in tests).
+    """
+    import stat
+
+    try:
+        from dotenv import load_dotenv
+
+        env_path = Path(".env")
+        if not env_path.exists():
+            return
+
+        if stat.S_ISFIFO(env_path.stat().st_mode):
+            import signal
+
+            def _timeout_handler(signum, frame):
+                raise TimeoutError
+
+            old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
+            signal.alarm(2)
+            try:
+                with open(env_path) as f:
+                    load_dotenv(stream=f)
+            except TimeoutError:
+                pass
+            finally:
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, old_handler)
+        else:
+            with open(env_path) as f:
+                load_dotenv(stream=f)
     except Exception:
         pass
 
-_load_env_from_cat()
+_load_env()
 
 logging.getLogger("fastmcp").setLevel(logging.WARNING)
 from fastmcp import FastMCP  # noqa: E402
@@ -162,16 +183,28 @@ def _get_client():
 # MCP Server & Tools
 # ---------------------------------------------------------------------------
 
-mcp = FastMCP("TestRail MCP")
+mcp = FastMCP(
+    "TestRail MCP",
+    instructions=(
+        "Use this server when the user mentions TestRail, Test Rail, "
+        "test cases, test runs, test results, test steps, test plans, "
+        "test suites, test milestones, test configurations, QA, "
+        "quality assurance, test management, or test reporting. "
+        "Start with browse_testrail_api to discover available categories, "
+        "then describe_testrail_method to learn how to call a specific method, "
+        "then run_testrail_command to execute it. "
+        "Use search_test_cases for quick title-based case lookups."
+    ),
+)
 
 
 @mcp.tool
-def list_categories() -> dict[str, Any]:
-    """List all available TestRail API categories and their methods.
+def browse_testrail_api() -> dict[str, Any]:
+    """Browse all available TestRail API categories and their methods.
 
     Returns a dict mapping each category name to its description and list of
-    available method names. Use get_method_info() to get details for a specific method,
-    then execute() to call it.
+    available method names. Use describe_testrail_method() to get details for a
+    specific method, then run_testrail_command() to call it.
     """
     return {
         name: {
@@ -183,8 +216,8 @@ def list_categories() -> dict[str, Any]:
 
 
 @mcp.tool
-def get_method_info(category: str, method: str) -> dict[str, Any]:
-    """Get detailed information about a specific TestRail API method.
+def describe_testrail_method(category: str, method: str) -> dict[str, Any]:
+    """Describe a specific TestRail API method — its parameters, types, and docs.
 
     Args:
         category: The API category (e.g. "projects", "cases", "runs").
@@ -192,7 +225,7 @@ def get_method_info(category: str, method: str) -> dict[str, Any]:
 
     Returns a dict with parameter details (name, type, required, default),
     docstring, and return type. Use this to understand what parameters
-    execute() needs.
+    run_testrail_command() needs.
     """
     if category not in CATALOG:
         return {
@@ -211,7 +244,7 @@ def get_method_info(category: str, method: str) -> dict[str, Any]:
 
 
 @mcp.tool
-def search_cases(
+def search_test_cases(
     project_id: int,
     query: str,
     suite_id: int | None = None,
@@ -235,9 +268,15 @@ def search_cases(
         kwargs: dict[str, Any] = {"project_id": project_id}
         if suite_id is not None:
             kwargs["suite_id"] = suite_id
-        all_cases = client.cases.get_cases(**kwargs)
+        response = client.cases.get_cases(**kwargs)
     except Exception as e:
         return {"error": f"{type(e).__name__}: {e}"}
+
+    # The API returns a paginated dict with a "cases" key; unwrap it.
+    if isinstance(response, dict):
+        all_cases = response.get("cases", [])
+    else:
+        all_cases = response
 
     query_lower = query.lower()
     matches = [
@@ -250,7 +289,7 @@ def search_cases(
 
 
 @mcp.tool
-def execute(
+def run_testrail_command(
     category: str,
     method: str,
     params: dict[str, Any] | None = None,
@@ -280,8 +319,8 @@ def execute(
             (original length), and a human-readable ``message``.
 
     Requires TESTRAIL_URL, TESTRAIL_USERNAME, and TESTRAIL_API_KEY environment
-    variables to be set. Use list_categories() and get_method_info() first to
-    discover available methods and their parameters.
+    variables to be set. Use browse_testrail_api() and describe_testrail_method()
+    first to discover available methods and their parameters.
     """
     # Validate against catalog
     if category not in CATALOG:
