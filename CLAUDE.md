@@ -41,9 +41,9 @@ uv pip install <package>
 
 ## Authentication & Secrets
 
-- Credentials are managed by **1Password** via an ephemeral `.env` file at the project root.
-- The `.env` file is **not** a normal file — it requires `cat .env` to trigger the 1Password listener and materialize the contents. Python's `open()` and shell `source`/`.` **do not** trigger it.
-- The server uses `_load_env_from_cat()` in `tram_mcp/server.py` to run `cat .env` via subprocess at startup and parse the results into `os.environ`.
+- Credentials are managed by **1Password** via an ephemeral `.env` file (FIFO named pipe) at the project root.
+- The `.env` is a named pipe that only serves data once per `open()`. Use `python-dotenv` with the `stream` parameter — do NOT pass the file path (dotenv re-opens internally and gets nothing). Shell `source`/`.` also do not work.
+- The server uses `_load_env_dotenv()` in `tram_mcp/server.py` to read `.env` via `load_dotenv(stream=f)` at startup.
 - **Do NOT hardcode credentials** in `.mcp.json` — the `env` block there won't stay in sync. Let the server read from `.env` at startup.
 - Supported env vars: `TESTRAIL_URL`, `TESTRAIL_USERNAME`, `TESTRAIL_API_KEY`, `TESTRAIL_PASSWORD`. Either `TESTRAIL_API_KEY` or `TESTRAIL_PASSWORD` must be set.
 - If auth fails repeatedly, check for **account lockout** — TestRail locks accounts after too many failed attempts (~10 min cooldown).
