@@ -20,7 +20,23 @@ Connect your AI coding assistant to [TestRail](https://www.testrail.com/) — ma
 
 ## Installation
 
-### Claude Desktop
+### Step 1 — Install `tram-mcp` once
+
+```bash
+uv tool install tram-mcp
+```
+
+This puts a `tram-mcp` binary on your `PATH` (typically `~/.local/bin/tram-mcp`).
+Run `uv tool upgrade tram-mcp` later to update.
+
+> **Why this and not `uvx tram-mcp`?** `uvx` re-resolves the package on every
+> launch — fine when its cache is warm (<1 s), but a cold cache costs **~4 s+**,
+> which can exceed an MCP client's startup timeout and show up as "server
+> failed to start." Installing once removes that variance entirely.
+
+### Step 2 — Configure your MCP client
+
+#### Claude Desktop
 
 Add to your Claude Desktop config file:
 
@@ -31,8 +47,7 @@ Add to your Claude Desktop config file:
 {
   "mcpServers": {
     "testrail": {
-      "command": "uvx",
-      "args": ["tram-mcp"],
+      "command": "tram-mcp",
       "env": {
         "TESTRAIL_URL": "https://yourinstance.testrail.io",
         "TESTRAIL_USERNAME": "your-email@example.com",
@@ -43,17 +58,17 @@ Add to your Claude Desktop config file:
 }
 ```
 
-### Claude Code
+#### Claude Code
 
 ```bash
 claude mcp add testrail \
   -e TESTRAIL_URL=https://yourinstance.testrail.io \
   -e TESTRAIL_USERNAME=your-email@example.com \
   -e TESTRAIL_API_KEY=your-api-key \
-  -- uvx tram-mcp
+  -- tram-mcp
 ```
 
-### VS Code / VS Code Insiders
+#### VS Code / VS Code Insiders
 
 Create `.vscode/mcp.json` in your project (or add to your User Settings):
 
@@ -62,8 +77,7 @@ Create `.vscode/mcp.json` in your project (or add to your User Settings):
   "servers": {
     "testrail": {
       "type": "stdio",
-      "command": "uvx",
-      "args": ["tram-mcp"],
+      "command": "tram-mcp",
       "env": {
         "TESTRAIL_URL": "",
         "TESTRAIL_USERNAME": "",
@@ -76,7 +90,7 @@ Create `.vscode/mcp.json` in your project (or add to your User Settings):
 
 VS Code supports `${input:variableName}` placeholders to prompt for values at startup.
 
-### Cursor
+#### Cursor
 
 Create `.cursor/mcp.json` in your project (or `~/.cursor/mcp.json` globally):
 
@@ -84,8 +98,7 @@ Create `.cursor/mcp.json` in your project (or `~/.cursor/mcp.json` globally):
 {
   "mcpServers": {
     "testrail": {
-      "command": "uvx",
-      "args": ["tram-mcp"],
+      "command": "tram-mcp",
       "env": {
         "TESTRAIL_URL": "https://yourinstance.testrail.io",
         "TESTRAIL_USERNAME": "your-email@example.com",
@@ -95,6 +108,14 @@ Create `.cursor/mcp.json` in your project (or `~/.cursor/mcp.json` globally):
   }
 }
 ```
+
+### Alternative — no-install via `uvx`
+
+If you prefer not to maintain a separate install, you can use `uvx tram-mcp`
+as the `command` (with `"args": ["tram-mcp"]`) — Cursor / VS Code / etc. style.
+This always pulls the latest version on each launch but pays a noticeable
+cold-cache cost (~4 s) that can intermittently exceed MCP client startup
+timeouts on slower networks. The installed approach above is recommended.
 
 ## Configuration
 
