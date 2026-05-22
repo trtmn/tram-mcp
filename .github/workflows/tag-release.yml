@@ -73,6 +73,18 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Check manifest.json version matches pyproject.toml
+        if: steps.tag_check.outputs.exists == 'false'
+        env:
+          EXPECTED_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          manifest_version=$(python3 -c \
+            'import json; print(json.load(open("manifest.json"))["version"])')
+          if [ "$manifest_version" != "$EXPECTED_VERSION" ]; then
+            echo "::error::manifest.json version ($manifest_version) does not match pyproject.toml version ($EXPECTED_VERSION)"
+            exit 1
+          fi
+
       - name: Create and push tag
         if: steps.tag_check.outputs.exists == 'false'
         run: |
@@ -121,9 +133,83 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: twine upload dist/*
 
+  build-mcpb:
+    name: Build .mcpb bundle
+    needs: [tag, publish]
+    if: needs.tag.outputs.tag_exists == 'false'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Stage bundle files
+        run: |
+          STAGE=$(mktemp -d)
+          mkdir -p "$STAGE/tram_mcp"
+          cp main.py manifest.json pyproject.toml uv.lock README.md "$STAGE/"
+          cp tram_mcp/__init__.py tram_mcp/server.py tram_mcp/_autoupdate.py "$STAGE/tram_mcp/"
+          echo "STAGE=$STAGE" >> "$GITHUB_ENV"
+
+      - name: Pack .mcpb
+        run: |
+          npx --yes @anthropic-ai/mcpb pack "$STAGE" testrail_mcp.mcpb
+
+      - name: Verify .mcpb manifest version
+        env:
+          EXPECTED_VERSION: ${{ needs.tag.outputs.version }}
+        run: |
+          packed_version=$(unzip -p testrail_mcp.mcpb manifest.json | \
+            python3 -c 'import json,sys; print(json.load(sys.stdin)["version"])')
+          if [ "$packed_version" != "$EXPECTED_VERSION" ]; then
+            echo "::error::.mcpb manifest version ($packed_version) does not match release version ($EXPECTED_VERSION)"
+            exit 1
+          fi
+          echo ".mcpb verified at version $packed_version"
+
+      - name: Upload .mcpb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcpb-bundle
+          path: testrail_mcp.mcpb
+          retention-days: 30
+
+  release:
+    name: Create GitHub Release
+    needs: [tag, publish, build-mcpb]
+    if: needs.tag.outputs.tag_exists == 'false'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Download .mcpb artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mcpb-bundle
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.tag.outputs.version }}
+        run: |
+          gh release create "v$VERSION" \
+            --title "v$VERSION" \
+            --generate-notes \
+            --latest \
+            testrail_mcp.mcpb
+
   sync-dev:
     name: Sync main back to dev
-    needs: publish
+    needs: release
     runs-on: ubuntu-latest
 
     steps:
