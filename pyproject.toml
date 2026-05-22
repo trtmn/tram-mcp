@@ -20,7 +20,7 @@ classifiers = [
     "Topic :: Software Development :: Testing",
 ]
 dependencies = [
-    "fastmcp>=2.12.4,<4",
+    "fastmcp>=3.3.1,<4",
     "testrail-api-module==0.7.0",
 ]
 

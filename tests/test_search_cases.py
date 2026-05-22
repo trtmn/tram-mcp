@@ -1,9 +1,7 @@
 """Tests for the search_cases tool (all use mocked client)."""
 from __future__ import annotations
 
-from tram_mcp.server import search_test_cases as _search_cases_tool
-
-search_cases = _search_cases_tool.fn
+from tram_mcp.server import search_test_cases as search_cases
 
 SAMPLE_CASES_LIST = [
     {"id": 1, "title": "Login with valid credentials", "section_id": 10},
