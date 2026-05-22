@@ -1173,19 +1173,19 @@ wheels = [
 
 [[package]]
 name = "testrail-api-module"
-version = "0.7.3"
+version = "0.7.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d7/5f/aac66a45e2c76a1ada5d5dfe6be322546e16d46008b673b55910db292431/testrail_api_module-0.7.3.tar.gz", hash = "sha256:a7a239e156acf792af7a1fa9f092ca71146831c424e243f9c4fa7a26f49fbe17", size = 74422, upload-time = "2026-05-22T22:10:06.798Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/75/d3/042b6ae647caacae37b13af3ac5d72508e8dba87bed86a09fa5cc0f606ed/testrail_api_module-0.7.4.tar.gz", hash = "sha256:d97b6278f0c10e37fd819e25931757918084782c7732dac01e3d9d1a341e5263", size = 74438, upload-time = "2026-05-22T22:54:27.347Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e7/a8/730e028cfef4205a1b865dd079520ba4cc0d2f0862dcf154f557d3e35649/testrail_api_module-0.7.3-py3-none-any.whl", hash = "sha256:01d4430629496ebeb164ef0902a7daf558f2e9761b3c0d16a3587ccf247c3283", size = 71319, upload-time = "2026-05-22T22:10:05.245Z" },
+    { url = "https://files.pythonhosted.org/packages/2f/a3/31a04b12f84660b9e81d12ab5ba77891e2206cfce2635561b439c8511759/testrail_api_module-0.7.4-py3-none-any.whl", hash = "sha256:d213f5cad2bded84f54a894aed4a2c907c8eefd1d6132855407cdb99efb680dd", size = 71318, upload-time = "2026-05-22T22:54:26.337Z" },
 ]
 
 [[package]]
 name = "tram-mcp"
-version = "0.5.3"
+version = "0.5.4"
 source = { editable = "." }
 dependencies = [
     { name = "fastmcp" },
@@ -1200,7 +1200,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastmcp", specifier = ">=3.3.1,<4" },
-    { name = "testrail-api-module", specifier = "==0.7.3" },
+    { name = "testrail-api-module", specifier = "==0.7.4" },
 ]
 
 [package.metadata.requires-dev]
