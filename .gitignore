@@ -16,3 +16,6 @@ wheels/
 # Local config
 .mcp.json
 .claude/settings.local.json
+
+# Built artifacts (.mcpb is built by CI on release; do not commit)
+testrail_mcp.mcpb
