@@ -1,10 +1,7 @@
 """Tests for the list_categories tool."""
 from __future__ import annotations
 
-from tram_mcp.server import CATALOG, browse_testrail_api as _list_categories_tool
-
-# FastMCP @mcp.tool wraps functions in FunctionTool; unwrap to call directly
-list_categories = _list_categories_tool.fn
+from tram_mcp.server import CATALOG, browse_testrail_api as list_categories
 
 
 def test_returns_all_categories():
