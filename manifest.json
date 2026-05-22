@@ -5,7 +5,7 @@
   "display_name": "TestRail MCP",
   "description": "Connect Claude to your TestRail instance. Browse projects, search test cases, manage runs and results — all through natural language. Requires Python 3.11+.",
   "author": {
-    "name": "Vermont Systems",
+    "name": "Matt Troutman",
     "url": "https://github.com/trtmn/tram-mcp"
   },
   "license": "MIT",

@@ -58,7 +58,7 @@ The MCP server should:
 
 ## TestRail Instance Notes
 
-- **URL:** `https://vermontsystems.testrail.io`
+- **URL:** Set via the `TESTRAIL_URL` env var (e.g. `https://yourinstance.testrail.io`).
 - **Templates:** Template 1 = "Test Case (Text)" uses `custom_steps`/`custom_expected` fields. Template 2 = "Test Case (Steps)" uses `custom_steps_separated` (array of `{content, expected}`). To use separated steps, set `template_id: 2`.
 - When updating cases from Text to Steps template, you must change `template_id` in the same call.
 
