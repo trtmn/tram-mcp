@@ -26,13 +26,22 @@ Connect your AI coding assistant to [TestRail](https://www.testrail.com/) — ma
 uv tool install tram-mcp
 ```
 
-This puts a `tram-mcp` binary on your `PATH` (typically `~/.local/bin/tram-mcp`).
-Run `uv tool upgrade tram-mcp` later to update.
+This puts a `tram-mcp` binary on your `PATH` (typically `~/.local/bin/tram-mcp`
+on macOS/Linux, `%APPDATA%\Python\Scripts\tram-mcp.exe` on Windows).
 
-> **Why this and not `uvx tram-mcp`?** `uvx` re-resolves the package on every
-> launch — fine when its cache is warm (<1 s), but a cold cache costs **~4 s+**,
-> which can exceed an MCP client's startup timeout and show up as "server
-> failed to start." Installing once removes that variance entirely.
+`tram-mcp` then auto-updates itself: on launch (at most once per day) it
+spawns a detached `uv tool upgrade tram-mcp` in the background. The current
+process keeps running on the existing binary; the upgrade lands on the next
+launch. Set `TRAM_MCP_NO_AUTO_UPDATE=1` to disable, or run
+`uv tool upgrade tram-mcp` manually anytime.
+
+> **Why this and not `uvx tram-mcp`?** `uvx` re-resolves and re-extracts
+> wheels on every launch. On Windows this races with Defender / OneDrive
+> scanning the uv cache and intermittently fails with
+> `Access is denied. (os error -2147024891)` — the server starts, then
+> exits before it can respond. Even on a healthy machine, a cold uvx cache
+> costs ~4 s+ and can exceed an MCP client's startup timeout. Installing
+> once removes both problems.
 
 ### Step 2 — Configure your MCP client
 
