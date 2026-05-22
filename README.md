@@ -20,7 +20,32 @@ Connect your AI coding assistant to [TestRail](https://www.testrail.com/) — ma
 
 ## Installation
 
-### Claude Desktop
+### Step 1 — Install `tram-mcp` once
+
+```bash
+uv tool install tram-mcp
+```
+
+This puts a `tram-mcp` binary on your `PATH` (typically `~/.local/bin/tram-mcp`
+on macOS/Linux, `%APPDATA%\Python\Scripts\tram-mcp.exe` on Windows).
+
+`tram-mcp` then auto-updates itself: on launch (at most once per day) it
+spawns a detached `uv tool upgrade tram-mcp` in the background. The current
+process keeps running on the existing binary; the upgrade lands on the next
+launch. Set `TRAM_MCP_NO_AUTO_UPDATE=1` to disable, or run
+`uv tool upgrade tram-mcp` manually anytime.
+
+> **Why this and not `uvx tram-mcp`?** `uvx` re-resolves and re-extracts
+> wheels on every launch. On Windows this races with Defender / OneDrive
+> scanning the uv cache and intermittently fails with
+> `Access is denied. (os error -2147024891)` — the server starts, then
+> exits before it can respond. Even on a healthy machine, a cold uvx cache
+> costs ~4 s+ and can exceed an MCP client's startup timeout. Installing
+> once removes both problems.
+
+### Step 2 — Configure your MCP client
+
+#### Claude Desktop
 
 Add to your Claude Desktop config file:
 
@@ -31,8 +56,7 @@ Add to your Claude Desktop config file:
 {
   "mcpServers": {
     "testrail": {
-      "command": "uvx",
-      "args": ["tram-mcp"],
+      "command": "tram-mcp",
       "env": {
         "TESTRAIL_URL": "https://yourinstance.testrail.io",
         "TESTRAIL_USERNAME": "your-email@example.com",
@@ -43,17 +67,17 @@ Add to your Claude Desktop config file:
 }
 ```
 
-### Claude Code
+#### Claude Code
 
 ```bash
 claude mcp add testrail \
   -e TESTRAIL_URL=https://yourinstance.testrail.io \
   -e TESTRAIL_USERNAME=your-email@example.com \
   -e TESTRAIL_API_KEY=your-api-key \
-  -- uvx tram-mcp
+  -- tram-mcp
 ```
 
-### VS Code / VS Code Insiders
+#### VS Code / VS Code Insiders
 
 Create `.vscode/mcp.json` in your project (or add to your User Settings):
 
@@ -62,8 +86,7 @@ Create `.vscode/mcp.json` in your project (or add to your User Settings):
   "servers": {
     "testrail": {
       "type": "stdio",
-      "command": "uvx",
-      "args": ["tram-mcp"],
+      "command": "tram-mcp",
       "env": {
         "TESTRAIL_URL": "",
         "TESTRAIL_USERNAME": "",
@@ -76,7 +99,7 @@ Create `.vscode/mcp.json` in your project (or add to your User Settings):
 
 VS Code supports `${input:variableName}` placeholders to prompt for values at startup.
 
-### Cursor
+#### Cursor
 
 Create `.cursor/mcp.json` in your project (or `~/.cursor/mcp.json` globally):
 
@@ -84,8 +107,7 @@ Create `.cursor/mcp.json` in your project (or `~/.cursor/mcp.json` globally):
 {
   "mcpServers": {
     "testrail": {
-      "command": "uvx",
-      "args": ["tram-mcp"],
+      "command": "tram-mcp",
       "env": {
         "TESTRAIL_URL": "https://yourinstance.testrail.io",
         "TESTRAIL_USERNAME": "your-email@example.com",
@@ -95,6 +117,21 @@ Create `.cursor/mcp.json` in your project (or `~/.cursor/mcp.json` globally):
   }
 }
 ```
+
+### Alternative — no-install via `uvx`
+
+If you prefer not to maintain a separate install, you can use `uvx tram-mcp`
+as the `command` (with `"args": ["tram-mcp"]`) — Cursor / VS Code / etc. style.
+This re-resolves on each launch, so a cold cache pays a noticeable ~4 s cost
+that can intermittently exceed MCP client startup timeouts. The launch-time
+auto-update (see above) also no-ops in this mode — `uvx` already pulls fresh
+on each invocation.
+
+> **Not recommended on Windows.** `uvx`'s per-launch wheel extraction races
+> Windows Defender real-time scanning and OneDrive sync over the uv cache,
+> producing intermittent `Failed to install: <wheel>. Caused by: Access is
+> denied. (os error -2147024891)` errors and "server failed to start"
+> behavior that retries fix. Use the `uv tool install` path above instead.
 
 ## Configuration
 
@@ -130,10 +167,10 @@ uv run pytest path/to/test.py::test_name -v
 Merging a PR to `main` automatically tags the version and publishes to PyPI. **You must bump the version before merging:**
 
 ```bash
-uv version 0.2.0  # update version in pyproject.toml
+uv version 0.6.0  # update version in pyproject.toml
 ```
 
-If you forget to bump, the publish will be skipped (the existing version tag already exists on PyPI).
+Also bump `manifest.json`'s `version` to match — both files must agree, and the `.mcpb` upload is rejected when the version isn't incremented. If you forget to bump, the PyPI publish is skipped (the existing version tag already exists on PyPI).
 
 ## License
 
