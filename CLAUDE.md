@@ -10,9 +10,9 @@ This is an MCP (Model Context Protocol) server that wraps the `testrail_api_modu
 
 ## Tech Stack
 
-- Python 3.13, managed with `uv`
+- Python 3.13, managed with `uv` (3.11+ supported at runtime; **Python 3.14 is not yet supported** — pinned in `pyproject.toml` as `>=3.11,<3.14`)
 - FastMCP (`fastmcp>=2.12.4`) for MCP server framework
-- `testrail_api_module` as the underlying TestRail API client (needs to be added as dependency)
+- `testrail_api_module` as the underlying TestRail API client
 
 ## Common Commands
 
@@ -24,13 +24,13 @@ uv sync
 uv add <package>
 
 # Run the MCP server
-uv run python main.py
+uv run tram-mcp
 
 # Run all tests
 uv run pytest
 
 # Run a single test
-uv run pytest test_testing/test_browse.py::test_apple_page_title -v
+uv run pytest tests/test_autoupdate.py::test_opt_out_skips -v
 
 # Run tests with output
 uv run pytest -s
@@ -41,10 +41,9 @@ uv pip install <package>
 
 ## Authentication & Secrets
 
-- Credentials are managed by **1Password** via an ephemeral `.env` file (FIFO named pipe) at the project root.
-- The `.env` is a named pipe that only serves data once per `open()`. Use `python-dotenv` with the `stream` parameter — do NOT pass the file path (dotenv re-opens internally and gets nothing). Shell `source`/`.` also do not work.
-- The server uses `_load_env_dotenv()` in `tram_mcp/server.py` to read `.env` via `load_dotenv(stream=f)` at startup.
-- **Do NOT hardcode credentials** in `.mcp.json` — the `env` block there won't stay in sync. Let the server read from `.env` at startup.
+- The server reads credentials from environment variables. For local development you can supply them via a `.env` file at the project root (loaded by `_load_env()` in `tram_mcp/server.py` using `python-dotenv`).
+- `.env` can be a regular file *or* a FIFO/named pipe (some secret managers expose secrets that way). FIFOs only serve data once per `open()`, so the loader reads via a stream rather than letting `load_dotenv` re-open the path, and applies a short timeout to avoid blocking indefinitely.
+- **Do NOT hardcode credentials** in `.mcp.json` — that `env` block goes stale. Set the env vars in your shell, your MCP client's `env` config, or a `.env` file.
 - Supported env vars: `TESTRAIL_URL`, `TESTRAIL_USERNAME`, `TESTRAIL_API_KEY`, `TESTRAIL_PASSWORD`. Either `TESTRAIL_API_KEY` or `TESTRAIL_PASSWORD` must be set.
 - If auth fails repeatedly, check for **account lockout** — TestRail locks accounts after too many failed attempts (~10 min cooldown).
 
@@ -56,9 +55,15 @@ The MCP server should:
 3. **Provide a category/discovery pattern** — e.g., a `list_categories` tool that returns available API modules, and a way to invoke specific endpoints — so the LLM can explore capabilities without being flooded with hundreds of tools upfront
 4. **Pass through** to `TestRailAPI` client methods, handling authentication via environment variables or MCP configuration
 
+## Distribution
+
+- **PyPI**: published as `tram-mcp`. End users install with `uv tool install tram-mcp` (recommended) or `uvx tram-mcp` (zero-install, but re-resolves on each launch — see auto-update note).
+- **.mcpb bundle**: `manifest.json` + `testrail_mcp.mcpb` at the repo root let Claude Desktop install the server as a one-click extension. The bundle's `mcp_config` launches the installed `tram-mcp` binary directly, **not** `uvx` — running `uvx` from the bundle path races Windows Defender / OneDrive scanning of the uv cache and intermittently fails with `Access is denied`. Rebuild the bundle after changing manifest or sources: `npx --yes @anthropic-ai/mcpb pack <staging-dir> testrail_mcp.mcpb`.
+- **Auto-update on launch**: `tram_mcp/_autoupdate.py` spawns a detached `uv tool upgrade tram-mcp` in the background at startup, debounced to once per 24h via a marker file. Never blocks the MCP handshake, swallows all errors, and no-ops when not running from a `uv tool` install. Disable with `TRAM_MCP_NO_AUTO_UPDATE=1`.
+
 ## TestRail Instance Notes
 
-- **URL:** `https://vermontsystems.testrail.io`
+- **URL:** Set via the `TESTRAIL_URL` env var (e.g. `https://yourinstance.testrail.io`).
 - **Templates:** Template 1 = "Test Case (Text)" uses `custom_steps`/`custom_expected` fields. Template 2 = "Test Case (Steps)" uses `custom_steps_separated` (array of `{content, expected}`). To use separated steps, set `template_id: 2`.
 - When updating cases from Text to Steps template, you must change `template_id` in the same call.
 

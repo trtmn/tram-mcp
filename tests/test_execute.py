@@ -1,9 +1,7 @@
 """Tests for the execute tool (all use mocked client)."""
 from __future__ import annotations
 
-from tram_mcp.server import run_testrail_command as _execute_tool
-
-execute = _execute_tool.fn
+from tram_mcp.server import run_testrail_command as execute
 
 
 def test_invalid_category(mock_client):
