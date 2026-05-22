@@ -12,10 +12,11 @@ from typing import Any
 def _load_env():
     """Load env vars from .env if present.
 
-    Supports both regular .env files and 1Password FIFO named pipes.
-    FIFO pipes only serve data once per open(), so we read via a stream
-    rather than letting load_dotenv re-open the path internally.
-    For FIFOs, we use a timeout to avoid blocking indefinitely (e.g. in tests).
+    Supports both regular .env files and FIFO named pipes (used by some
+    secret managers). FIFO pipes only serve data once per open(), so we
+    read via a stream rather than letting load_dotenv re-open the path
+    internally. For FIFOs, we use a timeout to avoid blocking
+    indefinitely (e.g. in tests).
     """
     import stat
 

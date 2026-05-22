@@ -122,9 +122,16 @@ Create `.cursor/mcp.json` in your project (or `~/.cursor/mcp.json` globally):
 
 If you prefer not to maintain a separate install, you can use `uvx tram-mcp`
 as the `command` (with `"args": ["tram-mcp"]`) — Cursor / VS Code / etc. style.
-This always pulls the latest version on each launch but pays a noticeable
-cold-cache cost (~4 s) that can intermittently exceed MCP client startup
-timeouts on slower networks. The installed approach above is recommended.
+This re-resolves on each launch, so a cold cache pays a noticeable ~4 s cost
+that can intermittently exceed MCP client startup timeouts. The launch-time
+auto-update (see above) also no-ops in this mode — `uvx` already pulls fresh
+on each invocation.
+
+> **Not recommended on Windows.** `uvx`'s per-launch wheel extraction races
+> Windows Defender real-time scanning and OneDrive sync over the uv cache,
+> producing intermittent `Failed to install: <wheel>. Caused by: Access is
+> denied. (os error -2147024891)` errors and "server failed to start"
+> behavior that retries fix. Use the `uv tool install` path above instead.
 
 ## Configuration
 
@@ -160,10 +167,10 @@ uv run pytest path/to/test.py::test_name -v
 Merging a PR to `main` automatically tags the version and publishes to PyPI. **You must bump the version before merging:**
 
 ```bash
-uv version 0.2.0  # update version in pyproject.toml
+uv version 0.6.0  # update version in pyproject.toml
 ```
 
-If you forget to bump, the publish will be skipped (the existing version tag already exists on PyPI).
+Also bump `manifest.json`'s `version` to match — both files must agree, and the `.mcpb` upload is rejected when the version isn't incremented. If you forget to bump, the PyPI publish is skipped (the existing version tag already exists on PyPI).
 
 ## License
 
