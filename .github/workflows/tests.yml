@@ -3,8 +3,9 @@ run-name: "Tests: ${{ github.event.head_commit.message || github.event.pull_requ
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main, development]
   pull_request:
+    branches: [main, development]
 
 permissions:
   contents: read
