@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.6](https://github.com/trtmn/tram-mcp/compare/v0.5.5...v0.5.6) (2026-05-23)
+
+
+### 🔄 Maintenance
+
+* **deps:** bump the actions group with 2 updates ([f2ddc4b](https://github.com/trtmn/tram-mcp/commit/f2ddc4b7b2f4da718ccd750c642cb313d399e1f5))
+* **deps:** bump the actions group with 2 updates ([13aee03](https://github.com/trtmn/tram-mcp/commit/13aee0367bf18d140e2a0fa1f44e1aa28e3042e1))
+
 ## [0.5.5](https://github.com/trtmn/tram-mcp/compare/v0.5.4...v0.5.5) (2026-05-23)
 
 
