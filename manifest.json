@@ -1,7 +1,7 @@
 {
   "manifest_version": "0.3",
   "name": "tram-mcp",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "display_name": "TestRail MCP",
   "description": "Connect Claude to your TestRail instance. Browse projects, search test cases, manage runs and results — all through natural language. Requires Python 3.11+.",
   "author": {
