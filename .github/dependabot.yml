@@ -1,0 +1,36 @@
+version: 2
+
+updates:
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    target-branch: "development"
+    groups:
+      uv:
+        patterns: ["*"]
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps"
+      include: "scope"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    target-branch: "development"
+    groups:
+      actions:
+        patterns: ["*"]
+    labels:
+      - "dependencies"
+      - "ci"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
