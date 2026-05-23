@@ -73,16 +73,38 @@ The MCP server should:
 
 ## Branching Strategy
 
-- **`main`** — production branch. Releases are cut and published from here. Never commit directly to main.
-- **`dev`** — integration branch. All feature work merges here first via PR.
-- **Feature branches** — branch from `dev`, do the work, open a PR back into `dev`.
-- When `dev` is stable and ready for release, open a PR from `dev` → `main`.
+- **`main`** — production mirror. Always reflects the latest published tag on PyPI. Never commit directly (protected by a repo ruleset: no force-push, no delete). The only commits that reach `main` are auto-merged sync PRs from `development` opened by the release workflow.
+- **`development`** — integration branch. All feature work merges here first via PR. release-please watches this branch.
+- **Feature branches** — branch from `development`, do the work, open a PR back into `development`.
 
-## Releasing
+## Commits
 
-- Merging a PR (or pushing) to `main` auto-tags and publishes to PyPI via GitHub Actions.
-- **Always bump the version** (`uv version X.Y.Z`) before merging to main. If the version isn't bumped, the publish is skipped.
-- A manual publish fallback exists via the "Publish Package (manual)" workflow in GitHub Actions.
+This repo uses **Conventional Commits** to drive release-please's automatic versioning and CHANGELOG generation. Use one of these prefixes in PR titles (which become squash-commit subjects):
+
+- `feat: …` — new functionality (minor bump pre-1.0, becomes minor post-1.0)
+- `fix: …` — bug fix (patch bump)
+- `chore: …`, `docs: …`, `ci: …`, `build: …`, `refactor: …`, `perf: …`, `test: …`, `style: …`, `deps: …` — no version bump on their own
+- Breaking change marker: add `!` after the type (`feat!: …`) or include a `BREAKING CHANGE:` line in the body — bumps the major (or minor pre-1.0).
+
+PR titles must follow this format; the squash-merge commit on `development` is what release-please parses.
+
+## Releasing (release-please)
+
+Releases are fully automated by `googleapis/release-please-action@v4`. Config lives at `.github/release-please-config.json` and the current version at `.github/.release-please-manifest.json`.
+
+Flow:
+
+1. Open a PR into `development` with a conventional-commits title. Merge it (squash).
+2. The `release-please` workflow on push-to-`development` opens (or updates) a **Release PR** that bumps the version in `.release-please-manifest.json`, `pyproject.toml` (via `release-type: python`), `manifest.json` (via `extra-files` jsonpath), and `main.py`'s `LAUNCHER_VERSION` line (marked with `# x-release-please-version`), plus regenerates `CHANGELOG.md`.
+3. When the Release PR is merged, the workflow continues:
+   - Creates the git tag (`vX.Y.Z`) and GitHub Release with release-please-generated notes.
+   - Builds and publishes to PyPI.
+   - Packs `testrail_mcp.mcpb` and attaches it to the GitHub Release.
+   - Opens an auto-merging PR `development → main` so `main` mirrors the release.
+
+Manual fallback: `.github/workflows/publish.yml` (`workflow_dispatch`) builds and publishes to PyPI on demand.
+
+`v*` tags and `main` are protected by repo rulesets (no deletion, no force-push), so once a release is cut it's pinned to its SHA forever.
 
 ## TestRail API Module Reference
 
