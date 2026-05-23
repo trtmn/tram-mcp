@@ -23,7 +23,7 @@ jobs:
     steps:
       - name: Run release-please
         id: release
-        uses: googleapis/release-please-action@v4
+        uses: googleapis/release-please-action@v5
         with:
           target-branch: development
           config-file: .github/release-please-config.json
@@ -79,7 +79,7 @@ jobs:
           ref: ${{ needs.release-please.outputs.tag_name }}
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "20"
 
