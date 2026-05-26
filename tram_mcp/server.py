@@ -191,12 +191,150 @@ mcp = FastMCP(
         "test cases, test runs, test results, test steps, test plans, "
         "test suites, test milestones, test configurations, QA, "
         "quality assurance, test management, or test reporting. "
+        "If a TestRail API call fails or you suspect credentials are wrong, "
+        "call check_testrail_auth first — it returns a structured diagnosis. "
         "Start with browse_testrail_api to discover available categories, "
         "then describe_testrail_method to learn how to call a specific method, "
         "then run_testrail_command to execute it. "
         "Use search_test_cases for quick title-based case lookups."
     ),
 )
+
+
+@mcp.tool
+def check_testrail_auth() -> dict[str, Any]:
+    """Verify the configured TestRail credentials and report a structured diagnosis.
+
+    Calls a lightweight TestRail endpoint (``get_priorities``, which every
+    authenticated user can reach) and translates the outcome into an
+    actionable result the LLM can act on. Use this when:
+
+    - A user reports the server isn't working
+    - Another tool returns a 401/403/auth error and the cause is unclear
+    - Confirming setup is correct before kicking off a longer workflow
+
+    Returns a dict with at least:
+      - ``ok``: bool — True if the credential check succeeded
+      - ``config``: which URL / username / auth method the server is using
+        (never includes the secret itself)
+
+    On success, also includes the priorities count and the username TestRail
+    associates with the credentials. On failure, includes ``error_class``,
+    ``error``, ``status_code`` (when extractable), and a human-readable
+    ``hint`` explaining the most likely cause and remediation.
+    """
+    config_view: dict[str, Any] = {
+        "url": os.environ.get("TESTRAIL_URL"),
+        "username": os.environ.get("TESTRAIL_USERNAME"),
+        "auth_method": _configured_auth_method(),
+    }
+
+    env_error = _check_env()
+    if env_error:
+        return {
+            "ok": False,
+            "error": env_error,
+            "error_class": "EnvironmentError",
+            "hint": (
+                "Set the required TESTRAIL_* environment variables and "
+                "restart the MCP server. Either TESTRAIL_API_KEY or "
+                "TESTRAIL_PASSWORD must be present."
+            ),
+            "config": config_view,
+        }
+
+    try:
+        client = _get_client()
+        priorities = client.priorities.get_priorities()
+    except Exception as exc:  # noqa: BLE001 — we catch broadly to translate to MCP-friendly dict
+        return _diagnose_auth_failure(exc, config_view)
+
+    return {
+        "ok": True,
+        "config": config_view,
+        "priorities_count": (
+            len(priorities) if isinstance(priorities, list) else None
+        ),
+        "hint": (
+            "Credentials work and the TestRail API is reachable. "
+            "Other tools should function normally."
+        ),
+    }
+
+
+def _configured_auth_method() -> str:
+    if os.environ.get("TESTRAIL_API_KEY"):
+        return "api_key"
+    if os.environ.get("TESTRAIL_PASSWORD"):
+        return "password"
+    return "none"
+
+
+def _diagnose_auth_failure(exc: Exception, config_view: dict[str, Any]) -> dict[str, Any]:
+    """Translate a testrail_api_module exception into a structured response.
+
+    The library raises distinct types for different failures, but the most
+    actionable signal — the HTTP status code — is only embedded in the
+    message string for the generic TestRailAPIException case. We pull it
+    out so the LLM can branch on 401 vs 403 vs 5xx without parsing prose.
+    """
+    import re
+
+    err_class = type(exc).__name__
+    msg = str(exc)
+
+    status: int | None = None
+    m = re.search(r"\b([4-5]\d\d)\b", msg)
+    if m:
+        status = int(m.group(1))
+
+    hint = _hint_for(err_class, status)
+
+    return {
+        "ok": False,
+        "error_class": err_class,
+        "error": msg,
+        "status_code": status,
+        "hint": hint,
+        "config": config_view,
+    }
+
+
+def _hint_for(err_class: str, status: int | None) -> str:
+    """Pick a hint based on the exception class and HTTP status."""
+    if err_class == "TestRailAuthenticationError" or status == 401:
+        return (
+            "TestRail rejected the credentials (HTTP 401). The username, "
+            "password, or API key is wrong. Verify the values match what "
+            "you can log in with via the TestRail web UI."
+        )
+    if status == 403:
+        return (
+            "TestRail accepted the credentials but the user isn't allowed "
+            "to use the API (HTTP 403). Common causes: API access is "
+            "disabled on the TestRail user's profile; the account is "
+            "locked after too many failed login attempts (~10 min cooldown); "
+            "or the user lacks permission for this endpoint."
+        )
+    if err_class == "TestRailRateLimitError" or status == 429:
+        return (
+            "TestRail is rate-limiting the server (HTTP 429). Slow the "
+            "request rate or wait before retrying."
+        )
+    if status is not None and status >= 500:
+        return (
+            f"TestRail returned a server error (HTTP {status}). The "
+            "TestRail instance is unhealthy; retry shortly."
+        )
+    if "Connection" in err_class or "Timeout" in err_class:
+        return (
+            "Network error reaching TestRail. Check the TESTRAIL_URL is "
+            "correct and reachable from this host."
+        )
+    return (
+        "Unrecognized failure. Surface the error message to the user so "
+        "they can decide what to do."
+    )
 
 
 @mcp.tool
