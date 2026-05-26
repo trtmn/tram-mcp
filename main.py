@@ -35,7 +35,7 @@ import time
 from pathlib import Path
 
 
-LAUNCHER_VERSION = "0.5.6"  # x-release-please-version
+LAUNCHER_VERSION = "0.6.0"  # x-release-please-version
 INSTALL_RETRY_DELAYS = (0, 2, 4, 8)  # seconds; first attempt is immediate
 INSTALL_TIMEOUT = 180  # seconds per attempt
 
