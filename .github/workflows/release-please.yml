@@ -88,7 +88,7 @@ jobs:
           STAGE=$(mktemp -d)
           mkdir -p "$STAGE/tram_mcp"
           cp main.py manifest.json pyproject.toml uv.lock README.md "$STAGE/"
-          cp tram_mcp/__init__.py tram_mcp/__main__.py tram_mcp/server.py tram_mcp/_autoupdate.py "$STAGE/tram_mcp/"
+          cp tram_mcp/__init__.py tram_mcp/__main__.py tram_mcp/server.py tram_mcp/_autoupdate.py tram_mcp/tools_static.json "$STAGE/tram_mcp/"
           echo "STAGE=$STAGE" >> "$GITHUB_ENV"
 
       - name: Pack .mcpb
