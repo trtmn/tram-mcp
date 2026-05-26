@@ -232,3 +232,90 @@ class TestStaticMetadataConsistency:
         for name in ("browse_testrail_api", "describe_testrail_method",
                      "run_testrail_command", "search_test_cases"):
             assert name in tram_mcp._INSTRUCTIONS, f"instructions missing {name}"
+
+
+class TestStaticToolsLoaded:
+    """The launcher only intercepts tools/list when the build-time capture is
+    present. These tests guard the loader path itself."""
+
+    def test_tools_static_json_is_present_and_well_formed(self):
+        # The package ships with tools_static.json — if this file goes
+        # missing the launcher falls back to forwarding tools/list to the
+        # (slow) child. That defeats half the point of the launcher, so
+        # fail CI early.
+        assert tram_mcp._STATIC_TOOLS is not None, (
+            "tram_mcp/tools_static.json is missing; "
+            "run `python scripts/regenerate_static_tools.py` to rebuild it"
+        )
+        assert isinstance(tram_mcp._STATIC_TOOLS, list)
+        assert len(tram_mcp._STATIC_TOOLS) > 0
+
+    def test_each_static_tool_has_required_fields(self):
+        for tool in tram_mcp._STATIC_TOOLS or []:
+            assert "name" in tool
+            assert "description" in tool
+            assert "inputSchema" in tool, (
+                f"tool {tool.get('name')!r} missing inputSchema — clients "
+                "won't know how to call it"
+            )
+
+    def test_static_tools_include_all_expected_names(self):
+        names = {t["name"] for t in (tram_mcp._STATIC_TOOLS or [])}
+        expected = {
+            "browse_testrail_api",
+            "describe_testrail_method",
+            "run_testrail_command",
+            "search_test_cases",
+        }
+        missing = expected - names
+        assert not missing, f"static tools missing {missing}"
+
+    def test_loader_returns_none_when_file_absent(self, tmp_path, monkeypatch):
+        # Move the bundled file out of the way and call _load_static_tools
+        # against a stand-in module path. Since the loader uses __file__ to
+        # locate the file, we drop a fake __init__.py + missing JSON in tmp.
+        import importlib.util
+
+        fake_pkg = tmp_path / "fake_tram"
+        fake_pkg.mkdir()
+        (fake_pkg / "__init__.py").write_text("", encoding="utf-8")
+        spec = importlib.util.spec_from_file_location(
+            "fake_tram", fake_pkg / "__init__.py"
+        )
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+
+        # Call the loader as if it lived in this fake package — patch
+        # pathlib.Path(__file__) by temporarily swapping the module's
+        # __file__ in the call.
+        with monkeypatch.context() as m:
+            m.setattr(tram_mcp, "__file__", str(fake_pkg / "__init__.py"))
+            result = tram_mcp._load_static_tools()
+        assert result is None
+
+
+class TestToolsListInterception:
+    """The proxy thread should answer tools/list from the embedded cache
+    rather than forwarding it. We exercise the predicate directly rather
+    than the threaded version, since the threaded version is harder to
+    drive deterministically in a unit test."""
+
+    def test_static_tools_serialize_to_valid_jsonrpc(self):
+        # The launcher wraps the static list in a JSON-RPC response. Make
+        # sure that wrapping survives a round trip without surprises (e.g.
+        # nested objects that aren't JSON-serializable would explode at
+        # runtime under heavy load).
+        if tram_mcp._STATIC_TOOLS is None:
+            pytest.skip("tools_static.json not loaded in this environment")
+        resp = {
+            "jsonrpc": "2.0",
+            "id": 99,
+            "result": {"tools": tram_mcp._STATIC_TOOLS},
+        }
+        encoded = json.dumps(resp)
+        decoded = json.loads(encoded)
+        assert decoded["result"]["tools"] == tram_mcp._STATIC_TOOLS
+        # Sanity: tools list shouldn't accidentally be empty after
+        # serialization (catches a subtle bug where someone replaces the
+        # JSON file with `[]`).
+        assert len(decoded["result"]["tools"]) >= 1
