@@ -32,7 +32,7 @@ New in this deployment:
 
 ## Configuration
 
-TestRail credentials resolve in priority order:
+TestRail credentials come from exactly one source, chosen in priority order:
 
 1. **`setup_testrail_connection` tool** — the user supplies instance URL,
    username, auth method (`api_key`/`password`), and secret in-conversation;
@@ -42,8 +42,13 @@ TestRail credentials resolve in priority order:
    `X-TestRail-Password`.
 3. **Worker secrets** — shared server-wide defaults.
 
-A client that supplies its own username must also supply its own secret —
-header/tool identities are never paired with the Worker-level key.
+**Credential sources are never mixed.** If a client supplies *any* of the
+`X-TestRail-*` headers (or uses `setup_testrail_connection`), the **entire**
+connection — URL, username, and secret — must come from that same source; the
+Worker secrets are not used as a fallback for the missing pieces. This prevents
+a client-supplied URL from being paired with the Worker's own credentials,
+which would transmit them to a client-controlled host. So per-client config is
+all-or-nothing: supply the full set, or none of it and rely on Worker secrets.
 
 ### Worker secrets
 
@@ -112,8 +117,11 @@ Claude Desktop / other JSON-config clients:
 }
 ```
 
-The `X-TestRail-*` headers are optional when Worker secrets are set, or when
-users configure their login via the `setup_testrail_connection` tool instead.
+Omit the `X-TestRail-*` headers entirely to use the Worker secrets, or to let
+users configure their login in-conversation via `setup_testrail_connection`. If
+you do send the headers, send the **complete** set (URL + username + key or
+password) — partial per-client config is rejected rather than completed from
+the Worker secrets (see Configuration above).
 
 ## Notes
 

@@ -8,16 +8,23 @@ export interface CatalogParam {
   default?: string;
 }
 
-export interface CatalogMethod {
-  doc: string;
-  params: CatalogParam[];
-  http?: {
-    verb: "GET" | "POST";
-    endpoint: string;
-    pathParams: string[];
-  };
-  unsupported?: string;
+export interface CatalogHttp {
+  verb: "GET" | "POST";
+  endpoint: string;
+  pathParams: string[];
 }
+
+/**
+ * A method is EITHER directly dispatchable (`http`) OR explained-as-unsupported
+ * (`unsupported`) — never both, never neither. The catalog generator guarantees
+ * this XOR structurally; the discriminated union makes the illegal states
+ * ("both"/"neither") unrepresentable for consumers. `assertCatalogInvariant`
+ * verifies the loaded JSON actually conforms.
+ */
+export type CatalogMethod = { doc: string; params: CatalogParam[] } & (
+  | { http: CatalogHttp; unsupported?: never }
+  | { http?: never; unsupported: string }
+);
 
 export interface CatalogCategory {
   description: string;
@@ -25,6 +32,24 @@ export interface CatalogCategory {
 }
 
 export const CATALOG = rawCatalog as unknown as Record<string, CatalogCategory>;
+
+/**
+ * Verify every loaded method has exactly one of `http` / `unsupported`. The
+ * JSON is cast unvalidated at load (it's a build-time artifact), so this guards
+ * against the generator and the TypeScript type drifting apart. Returns the
+ * list of offending "category.method" keys (empty when the catalog is valid).
+ */
+export function catalogInvariantViolations(): string[] {
+  const bad: string[] = [];
+  for (const [catName, cat] of Object.entries(CATALOG)) {
+    for (const [methodName, m] of Object.entries(cat.methods)) {
+      const hasHttp = "http" in m && m.http !== undefined;
+      const hasUnsupported = "unsupported" in m && m.unsupported !== undefined;
+      if (hasHttp === hasUnsupported) bad.push(`${catName}.${methodName}`);
+    }
+  }
+  return bad;
+}
 
 export interface LookupError {
   error: string;
@@ -73,21 +98,20 @@ export async function dispatchMethod(
   if ("error" in looked) throw new Error(looked.error);
   const { entry } = looked;
 
-  if (entry.unsupported) {
+  if (entry.unsupported !== undefined) {
     throw new Error(`'${category}.${method}' is not available: ${entry.unsupported}`);
   }
-  if (!entry.http) {
-    throw new Error(`'${category}.${method}' has no endpoint mapping.`);
-  }
+  // The discriminated union narrows `entry` to the `http` variant here.
+  const http = entry.http;
 
   const params = { ...(options.params ?? {}) };
-  let endpoint = entry.http.endpoint;
-  for (const name of entry.http.pathParams) {
+  let endpoint = http.endpoint;
+  for (const name of http.pathParams) {
     const value = params[name];
     if (value === undefined || value === null) {
       throw new Error(
         `Missing required parameter '${name}' for ${category}.${method}. ` +
-          `Endpoint template: ${entry.http.endpoint}`,
+          `Endpoint template: ${http.endpoint}`,
       );
     }
     endpoint = endpoint.replace(`{${name}}`, encodeURIComponent(String(value)));
@@ -104,7 +128,7 @@ export async function dispatchMethod(
     if (value !== undefined && value !== null) extra[key] = value;
   }
 
-  if (entry.http.verb === "GET") {
+  if (http.verb === "GET") {
     return client.get(endpoint, { ...rest, ...extra });
   }
   return client.post(

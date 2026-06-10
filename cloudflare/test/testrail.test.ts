@@ -6,7 +6,6 @@ const CREDS = {
   url: "https://example.testrail.io",
   username: "user@example.com",
   secret: "key123",
-  authMethod: "api_key" as const,
 };
 
 function client(): TestRailClient {
@@ -63,6 +62,19 @@ describe("request handling", () => {
     expect(await client().post("delete_case/5")).toEqual({});
   });
 
+  it("treats a 201 Created body as success, not failure", async () => {
+    mockFetchOnce(201, JSON.stringify({ id: 50 }));
+    expect(await client().post("add_run/1", { name: "X" })).toEqual({ id: 50 });
+  });
+
+  it("includes a body snippet when a 200 returns non-JSON (WAF/proxy page)", async () => {
+    mockFetchOnce(200, "<html>Access Denied</html>");
+    const err = (await client().get("get_run/1").catch((e: unknown) => e)) as TestRailError;
+    expect(err).toBeInstanceOf(TestRailError);
+    expect(err.message).toMatch(/Invalid JSON/);
+    expect(err.message).toContain("Access Denied");
+  });
+
   it("raises TestRailError with status 401 on auth failure", async () => {
     mockFetchOnce(401, "");
     const err = (await client().get("get_priorities").catch((e: unknown) => e)) as TestRailError;
@@ -89,6 +101,46 @@ describe("request handling", () => {
     expect(fn).toHaveBeenCalledTimes(4); // initial + 3 retries
     expect(err).toBeInstanceOf(TestRailError);
     expect(err.status).toBe(503);
+  });
+
+  it("honors Retry-After (seconds) for backoff on a retried 429", async () => {
+    vi.useFakeTimers();
+    let calls = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        calls += 1;
+        return calls === 1
+          ? new Response("", { status: 429, headers: { "Retry-After": "2" } })
+          : new Response(JSON.stringify({ id: 1 }), { status: 200 });
+      }),
+    );
+    const promise = client().get("get_run/1");
+    // Not resolved after 1s; the Retry-After asked for 2s.
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(calls).toBe(1);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(await promise).toEqual({ id: 1 });
+  });
+
+  it("notes retry exhaustion in the thrown error message", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 503 })));
+    const promise = client().get("get_priorities").catch((e: unknown) => e);
+    await vi.runAllTimersAsync();
+    const err = (await promise) as TestRailError;
+    expect(err.message).toMatch(/after 4 attempts/);
+  });
+
+  it("marks network failures with a null status", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("ECONNREFUSED"); }));
+    const promise = client().get("get_priorities").catch((e: unknown) => e);
+    await vi.runAllTimersAsync();
+    const err = (await promise) as TestRailError;
+    expect(err).toBeInstanceOf(TestRailError);
+    expect(err.status).toBeNull();
+    expect(err.message).toMatch(/Request failed/);
   });
 
   it("recovers when a retry succeeds", async () => {

@@ -34,7 +34,6 @@ export interface TestRailCredentials {
   url: string;
   username: string;
   secret: string;
-  authMethod: "api_key" | "password";
 }
 
 interface ResolvedSource {
@@ -44,16 +43,39 @@ interface ResolvedSource {
   password?: string;
 }
 
+/** True when the client supplied any TestRail credential field via props. */
+function clientSupplied(props?: ConnectionProps): boolean {
+  return (
+    !!props &&
+    !!(
+      props.testrailUrl ||
+      props.testrailUsername ||
+      props.testrailApiKey ||
+      props.testrailPassword
+    )
+  );
+}
+
 function resolveSource(env: Env, props?: ConnectionProps): ResolvedSource {
+  // All-or-nothing per source. If the client supplies ANY credential field,
+  // the entire connection is resolved from the client props with NO fallback
+  // to the Worker secrets — and vice versa. Mixing sources (e.g. a
+  // client-supplied URL paired with the Worker's own username + key) would
+  // transmit the Worker's credentials as Basic auth to a client-controlled
+  // host, leaking them. The two identities are therefore never combined.
+  if (clientSupplied(props)) {
+    return {
+      url: props!.testrailUrl,
+      username: props!.testrailUsername,
+      apiKey: props!.testrailApiKey,
+      password: props!.testrailPassword,
+    };
+  }
   return {
-    url: props?.testrailUrl || env.TESTRAIL_URL,
-    username: props?.testrailUsername || env.TESTRAIL_USERNAME,
-    // A client that supplies its own username uses only its own secret —
-    // never mix one identity's login with another's key.
-    apiKey: props?.testrailUsername ? props?.testrailApiKey : props?.testrailApiKey || env.TESTRAIL_API_KEY,
-    password: props?.testrailUsername
-      ? props?.testrailPassword
-      : props?.testrailPassword || env.TESTRAIL_PASSWORD,
+    url: env.TESTRAIL_URL,
+    username: env.TESTRAIL_USERNAME,
+    apiKey: env.TESTRAIL_API_KEY,
+    password: env.TESTRAIL_PASSWORD,
   };
 }
 
@@ -83,7 +105,6 @@ export function getCredentials(env: Env, props?: ConnectionProps): TestRailCrede
     url: src.url!.replace(/\/+$/, ""),
     username: src.username!,
     secret: (src.apiKey ?? src.password)!,
-    authMethod: src.apiKey ? "api_key" : "password",
   };
 }
 
@@ -94,6 +115,6 @@ export function configView(env: Env, props?: ConnectionProps): Record<string, un
     url: src.url ?? null,
     username: src.username ?? null,
     auth_method: src.apiKey ? "api_key" : src.password ? "password" : "none",
-    credential_source: props?.testrailUsername || props?.testrailUrl ? "per-client headers" : "worker secrets",
+    credential_source: clientSupplied(props) ? "per-client" : "worker secrets",
   };
 }

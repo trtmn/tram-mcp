@@ -13,6 +13,9 @@ export const SERVER_INSTRUCTIONS =
   "quality assurance, test management, or test reporting. " +
   "If a TestRail API call fails or you suspect credentials are wrong, " +
   "call check_testrail_auth first — it returns a structured diagnosis. " +
+  "If it reports missing configuration, offer setup_testrail_connection to " +
+  "configure the instance URL, username, and API key or password for this " +
+  "session. " +
   "Start with browse_testrail_api to discover available categories, " +
   "then describe_testrail_method to learn how to call a specific method, " +
   "then run_testrail_command to execute it. " +
@@ -514,18 +517,25 @@ export function registerTools(server: McpServer, ctx: ToolContext): void {
           pass_rate_pct: executed > 0 ? Math.round((counts.passed / executed) * 1000) / 10 : null,
         };
         if (include_failed_tests && counts.failed > 0) {
-          const response = await client.get(`get_tests/${run_id}`, {
-            status_id: STATUS_IDS.failed,
-          });
-          const tests: unknown[] = Array.isArray(response)
-            ? response
-            : ((response as Record<string, unknown>)?.tests as unknown[]) ?? [];
-          summary.failed_tests = tests
-            .filter(
-              (t): t is Record<string, unknown> => t !== null && typeof t === "object",
-            )
-            .slice(0, 50)
-            .map((t) => ({ id: t.id, case_id: t.case_id, title: t.title }));
+          // Enriching with the failed-test list is optional: if this second
+          // call fails, keep the valid summary and report the enrichment error
+          // alongside it rather than discarding the run data the caller wanted.
+          try {
+            const response = await client.get(`get_tests/${run_id}`, {
+              status_id: STATUS_IDS.failed,
+            });
+            const tests: unknown[] = Array.isArray(response)
+              ? response
+              : ((response as Record<string, unknown>)?.tests as unknown[]) ?? [];
+            summary.failed_tests = tests
+              .filter(
+                (t): t is Record<string, unknown> => t !== null && typeof t === "object",
+              )
+              .slice(0, 50)
+              .map((t) => ({ id: t.id, case_id: t.case_id, title: t.title }));
+          } catch (err) {
+            summary.failed_tests_error = errorMessage(err);
+          }
         }
         return jsonResult(summary);
       } catch (err) {
@@ -540,21 +550,23 @@ export function registerTools(server: McpServer, ctx: ToolContext): void {
       title: "Add Result for Case",
       description:
         "Record a test result for a case in a run — the most common QA " +
-        "write operation. Accepts a status name (passed, blocked, untested, " +
-        "retest, failed) or a numeric status_id for custom statuses. " +
-        "Optionally attach a comment, defect references, version, and " +
-        "elapsed time.",
+        "write operation. Accepts a status name (passed, blocked, retest, " +
+        "failed) or a numeric status_id for custom statuses. Note: " +
+        "'untested' is not a recordable result — it is the absence of one — " +
+        "so TestRail rejects it here. Optionally attach a comment, defect " +
+        "references, version, and elapsed time.",
       inputSchema: {
         run_id: z.number().int().describe("The ID of the test run."),
         case_id: z.number().int().describe("The ID of the test case."),
         status: z
           .union([
-            z.enum(["passed", "blocked", "untested", "retest", "failed"]),
+            z.enum(["passed", "blocked", "retest", "failed"]),
             z.number().int(),
           ])
           .describe(
-            "Result status: a standard status name or a numeric status_id " +
-              "(for custom statuses).",
+            "Result status: a standard status name (passed, blocked, retest, " +
+              "failed) or a numeric status_id for custom statuses. 'untested' " +
+              "cannot be recorded.",
           ),
         comment: z.string().optional().describe("Comment describing the result."),
         defects: z

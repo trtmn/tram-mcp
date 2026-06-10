@@ -1,29 +1,9 @@
+import { checkAuth } from "./auth";
 import type { Env } from "./env";
 import { propsFromHeaders } from "./env";
 import { TestRailMCP, VERSION } from "./mcp";
 
 export { TestRailMCP };
-
-function unauthorized(message: string): Response {
-  return Response.json({ error: message }, { status: 401 });
-}
-
-/**
- * When MCP_AUTH_TOKEN is set, clients must send it as a bearer token.
- * Without it the Worker is open — fine for testing, not recommended for
- * production since the Worker holds TestRail credentials.
- */
-function checkAuth(request: Request, env: Env): Response | null {
-  if (!env.MCP_AUTH_TOKEN) return null;
-  const header = request.headers.get("Authorization") ?? "";
-  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
-  if (token !== env.MCP_AUTH_TOKEN) {
-    return unauthorized(
-      "Missing or invalid bearer token. Send 'Authorization: Bearer <MCP_AUTH_TOKEN>'.",
-    );
-  }
-  return null;
-}
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -38,7 +18,7 @@ export default {
       });
     }
 
-    const denied = checkAuth(request, env);
+    const denied = await checkAuth(request, env);
     if (denied) return denied;
 
     // Per-connection TestRail credentials may arrive as headers; McpAgent

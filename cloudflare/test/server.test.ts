@@ -17,11 +17,12 @@ interface Harness {
   stored: { creds?: ConnectionProps };
 }
 
-async function startServer(env: Env = ENV): Promise<Harness> {
+async function startServer(env: Env = ENV, props?: ConnectionProps): Promise<Harness> {
   const stored: { creds?: ConnectionProps } = {};
   const server = new McpServer({ name: "TestRail MCP", version: "test" });
   registerTools(server, {
     env,
+    props,
     getStoredCreds: () => stored.creds,
     storeCreds: (creds) => {
       stored.creds = creds;
@@ -326,5 +327,213 @@ describe("MCP server", () => {
       suite_id: 9,
       case_ids: [1, 2, 3],
     });
+  });
+
+  it("create_test_run defaults to include_all when case_ids is omitted", async () => {
+    const fetchMock = vi.fn(
+      async () => new Response(JSON.stringify({ id: 78 }), { status: 200 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const { client } = await startServer();
+    await client.callTool({
+      name: "create_test_run",
+      arguments: { project_id: 3, name: "Full" },
+    });
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toEqual({
+      name: "Full",
+      include_all: true,
+    });
+  });
+
+  it("add_result_for_case passes a numeric custom status_id through unchanged", async () => {
+    const fetchMock = vi.fn(
+      async () => new Response(JSON.stringify({ id: 1 }), { status: 200 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const { client } = await startServer();
+    await client.callTool({
+      name: "add_result_for_case",
+      arguments: { run_id: 1, case_id: 2, status: 9 },
+    });
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toEqual({ status_id: 9 });
+  });
+
+  it("add_result_for_case rejects the non-recordable 'untested' status", async () => {
+    const { client } = await startServer();
+    const result = await client.callTool({
+      name: "add_result_for_case",
+      arguments: { run_id: 1, case_id: 2, status: "untested" },
+    });
+    // Zod rejects the enum value before any TestRail call is made.
+    expect((result as { isError?: boolean }).isError).toBe(true);
+  });
+
+  it("stored credentials take precedence over per-request header props", async () => {
+    const fetchMock = vi.fn(
+      async () => new Response(JSON.stringify([]), { status: 200 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    // Request arrives with one identity's headers...
+    const { client } = await startServer(ENV, {
+      testrailUrl: "https://header.testrail.io",
+      testrailUsername: "header@me.com",
+      testrailApiKey: "header-key",
+    });
+    // ...but the session was explicitly configured with another.
+    await client.callTool({
+      name: "setup_testrail_connection",
+      arguments: {
+        instance_url: "https://stored.testrail.io",
+        username: "stored@me.com",
+        auth_method: "api_key",
+        secret: "stored-key",
+      },
+    });
+    await client.callTool({ name: "check_testrail_auth", arguments: {} });
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(String(url)).toContain("https://stored.testrail.io");
+    const headers = init.headers as Record<string, string>;
+    expect(headers.Authorization).toBe(`Basic ${btoa("stored@me.com:stored-key")}`);
+  });
+
+  it("get_run_summary skips the failed-tests fetch when there are no failures", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          id: 5,
+          name: "Clean",
+          project_id: 1,
+          passed_count: 5,
+          failed_count: 0,
+          blocked_count: 0,
+          retest_count: 0,
+          untested_count: 0,
+        }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const { client } = await startServer();
+    const result = await client.callTool({
+      name: "get_run_summary",
+      arguments: { run_id: 5 },
+    });
+    const data = textOf(result) as Record<string, unknown>;
+    expect(data.pass_rate_pct).toBe(100);
+    expect(data.failed_tests).toBeUndefined();
+    expect(fetchMock).toHaveBeenCalledTimes(1); // only get_run, no get_tests
+  });
+
+  it("get_run_summary returns null pass rate for an all-untested run", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          id: 6,
+          name: "Fresh",
+          project_id: 1,
+          passed_count: 0,
+          failed_count: 0,
+          blocked_count: 0,
+          retest_count: 0,
+          untested_count: 4,
+        }),
+        { status: 200 },
+      ),
+    ));
+    const { client } = await startServer();
+    const result = await client.callTool({
+      name: "get_run_summary",
+      arguments: { run_id: 6 },
+    });
+    const data = textOf(result) as Record<string, unknown>;
+    expect(data.pass_rate_pct).toBeNull();
+    expect(data.total_tests).toBe(4);
+  });
+
+  it("get_run_summary keeps the summary when the failed-tests fetch fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        if (String(url).includes("get_run/")) {
+          return new Response(
+            JSON.stringify({
+              id: 7,
+              name: "Flaky",
+              project_id: 1,
+              passed_count: 3,
+              failed_count: 2,
+              blocked_count: 0,
+              retest_count: 0,
+              untested_count: 0,
+            }),
+            { status: 200 },
+          );
+        }
+        return new Response("", { status: 403 }); // get_tests denied
+      }),
+    );
+    const { client } = await startServer();
+    const result = await client.callTool({
+      name: "get_run_summary",
+      arguments: { run_id: 7 },
+    });
+    const data = textOf(result) as Record<string, unknown>;
+    expect((data.counts as Record<string, number>).failed).toBe(2);
+    expect(data.failed_tests).toBeUndefined();
+    expect(data.failed_tests_error).toBeDefined();
+  });
+
+  it("run_testrail_command reports a null/empty result as { status: ok }", async () => {
+    // delete_case returns an empty 200 body -> {} -> treated as ok status.
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 200 })));
+    const { client } = await startServer();
+    const result = await client.callTool({
+      name: "run_testrail_command",
+      arguments: { category: "cases", method: "delete_case", params: { case_id: 5 } },
+    });
+    expect(textOf(result)).toEqual({});
+  });
+
+  it("run_testrail_command field-filters a short list without truncating", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify([
+            { id: 1, name: "Low", short_name: "L" },
+            { id: 2, name: "High", short_name: "H" },
+          ]),
+          { status: 200 },
+        ),
+      ),
+    );
+    const { client } = await startServer();
+    const result = await client.callTool({
+      name: "run_testrail_command",
+      arguments: {
+        category: "priorities",
+        method: "get_priorities",
+        fields: ["id", "name"],
+      },
+    });
+    // No truncation wrapper — the trimmed array is returned directly.
+    expect(textOf(result)).toEqual([
+      { id: 1, name: "Low" },
+      { id: 2, name: "High" },
+    ]);
+  });
+
+  it("surfaces a TestRail error from a tool as isError", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 401 })));
+    const { client } = await startServer();
+    const result = await client.callTool({
+      name: "search_test_cases",
+      arguments: { project_id: 1, query: "x" },
+    });
+    expect((result as { isError?: boolean }).isError).toBe(true);
+    const data = textOf(result) as { error: string };
+    expect(data.error).toMatch(/Authentication failed/);
   });
 });

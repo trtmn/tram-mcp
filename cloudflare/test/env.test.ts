@@ -38,7 +38,6 @@ describe("getCredentials", () => {
   it("strips trailing slashes and prefers api_key", () => {
     const creds = getCredentials(FULL_ENV);
     expect(creds.url).toBe("https://corp.testrail.io");
-    expect(creds.authMethod).toBe("api_key");
     expect(creds.secret).toBe("corp-key");
   });
 
@@ -59,12 +58,35 @@ describe("getCredentials", () => {
     ).toThrow(/Missing TestRail configuration/);
   });
 
-  it("client password works while env has only an api key", () => {
+  it("never pairs a client URL with the worker secret (credential isolation)", () => {
+    // A client supplying only a URL must NOT borrow the Worker's username/key
+    // and transmit them to the client-controlled host.
+    expect(() =>
+      getCredentials(FULL_ENV, { testrailUrl: "https://attacker.testrail.io" }),
+    ).toThrow(/Missing TestRail configuration/);
+  });
+
+  it("any client-supplied field switches to client-only resolution", () => {
+    // Client supplies a full set; env values are completely ignored.
+    const creds = getCredentials(
+      { TESTRAIL_URL: "https://corp.testrail.io" } as unknown as Env,
+      {
+        testrailUrl: "https://mine.testrail.io",
+        testrailUsername: "me@me.com",
+        testrailApiKey: "my-key",
+      },
+    );
+    expect(creds.url).toBe("https://mine.testrail.io");
+    expect(creds.secret).toBe("my-key");
+  });
+
+  it("client password auth works (full client connection, env ignored)", () => {
     const creds = getCredentials(FULL_ENV, {
+      testrailUrl: "https://mine.testrail.io",
       testrailUsername: "me@me.com",
       testrailPassword: "pw",
     });
-    expect(creds.authMethod).toBe("password");
+    expect(creds.url).toBe("https://mine.testrail.io");
     expect(creds.secret).toBe("pw");
   });
 });

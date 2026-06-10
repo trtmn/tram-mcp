@@ -56,8 +56,18 @@ export class TestRailClient {
 
     let response: Response | null = null;
     let lastNetworkError: Error | null = null;
+    let attempts = 0;
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-      if (attempt > 0) await sleep(1000 * attempt);
+      if (attempt > 0) {
+        // Honor the server's Retry-After (seconds) when present, otherwise
+        // back off linearly. Capped so a hostile header can't stall the Worker.
+        const retryAfter = response?.headers.get("Retry-After");
+        const backoffMs = retryAfter
+          ? Math.min(Number(retryAfter) * 1000 || attempt * 1000, 10_000)
+          : attempt * 1000;
+        await sleep(backoffMs);
+      }
+      attempts = attempt + 1;
       try {
         response = await fetch(url, {
           method,
@@ -73,22 +83,36 @@ export class TestRailClient {
     }
 
     if (!response) {
+      // status === null marks a network failure (vs an HTTP error with a
+      // status), which callers use to distinguish connectivity from auth/API
+      // problems without parsing the message.
+      const suffix = attempts > 1 ? ` after ${attempts} attempts` : "";
       throw new TestRailError(
-        `Request failed: ${lastNetworkError?.message ?? "network error"}`,
+        `Request failed${suffix}: ${lastNetworkError?.message ?? "network error"}`,
       );
     }
-    return this.handleResponse(response);
+    return this.handleResponse(response, attempts);
   }
 
-  private async handleResponse(response: Response): Promise<Json> {
+  private async handleResponse(response: Response, attempts = 1): Promise<Json> {
     const text = (await response.text()).trim();
+    // Note in error messages when the request was already retried, so the
+    // caller knows the failure is sustained rather than a one-off.
+    const retried = attempts > 1 ? ` after ${attempts} attempts` : "";
 
-    if (response.status === 200) {
+    if (response.ok) {
+      // Any 2xx is success. TestRail v2 normally returns 200, but 201/204
+      // (e.g. on writes) must not be mistaken for failures.
       if (!text) return {}; // empty body is valid for delete operations
       try {
         return JSON.parse(text);
       } catch (err) {
-        throw new TestRailError(`Invalid JSON response: ${err}`, 200, text);
+        const snippet = text.length > 200 ? `${text.slice(0, 200)}…` : text;
+        throw new TestRailError(
+          `Invalid JSON response from TestRail (HTTP ${response.status}): ${snippet}`,
+          response.status,
+          text,
+        );
       }
     }
 
@@ -104,14 +128,14 @@ export class TestRailClient {
       const retryAfter = response.headers.get("Retry-After");
       throw new TestRailError(
         retryAfter
-          ? `Rate limit exceeded. Retry after ${retryAfter} seconds.`
-          : "Rate limit exceeded.",
+          ? `Rate limit exceeded${retried}. Retry after ${retryAfter} seconds.`
+          : `Rate limit exceeded${retried}.`,
         429,
         text,
       );
     }
 
-    let message = `API request failed with status ${response.status}`;
+    let message = `API request failed with status ${response.status}${retried}`;
     try {
       const data = JSON.parse(text) as { error?: string };
       if (data && typeof data.error === "string") message = data.error;

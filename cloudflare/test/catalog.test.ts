@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { CATALOG, dispatchMethod, lookupMethod } from "../src/catalog";
+import {
+  CATALOG,
+  catalogInvariantViolations,
+  dispatchMethod,
+  lookupMethod,
+} from "../src/catalog";
 import type { TestRailClient } from "../src/testrail";
 
 function fakeClient() {
@@ -46,6 +51,12 @@ describe("catalog", () => {
       expect(["GET", "POST"]).toContain(m.http!.verb);
       expect(m.http!.endpoint).toBeTruthy();
     }
+  });
+
+  it("every method has exactly one of http / unsupported (XOR invariant)", () => {
+    // Guards against the generator and the TypeScript union drifting apart,
+    // since catalog.json is cast unvalidated at load.
+    expect(catalogInvariantViolations()).toEqual([]);
   });
 
   it("lookupMethod reports unknown categories and methods", () => {
