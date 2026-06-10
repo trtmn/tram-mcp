@@ -19,3 +19,10 @@ wheels/
 
 # Built artifacts (.mcpb is built by CI on release; do not commit)
 testrail_mcp.mcpb
+
+# Cloudflare Worker (cloudflare/)
+cloudflare/node_modules/
+cloudflare/dist/
+cloudflare/.wrangler/
+cloudflare/.dev.vars
+cloudflare/worker-configuration.d.ts

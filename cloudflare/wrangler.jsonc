@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tram-mcp",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-05-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "MCP_OBJECT",
+        "class_name": "TestRailMCP"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["TestRailMCP"]
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+  // Secrets (set with `wrangler secret put <NAME>`):
+  //   TESTRAIL_URL       e.g. https://yourinstance.testrail.io
+  //   TESTRAIL_USERNAME  TestRail login email
+  //   TESTRAIL_API_KEY   API key (or TESTRAIL_PASSWORD)
+  //   MCP_AUTH_TOKEN     optional bearer token required from MCP clients
+}

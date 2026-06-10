@@ -14,6 +14,10 @@ This is an MCP (Model Context Protocol) server that wraps the `testrail_api_modu
 - FastMCP (`fastmcp>=2.12.4`) for MCP server framework
 - `testrail_api_module` as the underlying TestRail API client
 
+## Cloudflare Workers Deployment (`cloudflare/`)
+
+A parallel TypeScript implementation lives in `cloudflare/` — a remote MCP server on Cloudflare Workers (Durable Objects via the `agents` SDK, streamable HTTP at `/mcp`, SSE at `/sse`). It does not import `testrail_api_module`; instead, `cloudflare/scripts/generate_catalog.py` AST-parses that module's source (sibling checkout at `~/git/testrail_api_module`) into `cloudflare/src/catalog.json`, and the Worker dispatches generically (path params fill the endpoint template, the rest go to query string for GET / JSON body for POST). Regenerate the catalog with `npm run catalog` whenever the Python module changes. Commands (from `cloudflare/`): `npm run check` (tsc), `npm test` (vitest), `npm run dev`, `npm run deploy`. See `cloudflare/README.md` for credentials (Worker secrets, per-client `X-TestRail-*` headers, or the `setup_testrail_connection` tool) and deploy details.
+
 ## Common Commands
 
 ```bash
