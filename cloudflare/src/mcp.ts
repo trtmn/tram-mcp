@@ -7,9 +7,10 @@ import { VERSION } from "./version";
 
 export { VERSION };
 
-// Header-only model: credentials come solely from per-request X-TestRail-*
-// headers (or Worker env). Nothing is persisted — no Durable Object state, no
-// KV — so Cloudflare stores no credentials at rest.
+// No per-agent Durable Object state. TestRail credentials arrive as the OAuth
+// grant props (this.props), set by the /authorize handler; the OAuth provider
+// persists them in OAUTH_KV encrypted with the access token, so Cloudflare
+// holds no decryption key.
 type State = Record<string, never>;
 
 export class TestRailMCP extends McpAgent<Env, State, ConnectionProps> {

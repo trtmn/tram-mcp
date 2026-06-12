@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Env } from "../src/env";
-import { checkConfig, configView, getCredentials, propsFromHeaders } from "../src/env";
+import { checkConfig, configView, getCredentials } from "../src/env";
 
 const FULL_ENV = {
   TESTRAIL_URL: "https://corp.testrail.io/",
@@ -91,22 +91,8 @@ describe("getCredentials", () => {
   });
 });
 
-describe("propsFromHeaders / configView", () => {
-  it("extracts the X-TestRail-* headers", () => {
-    const headers = new Headers({
-      "X-TestRail-URL": "https://h.testrail.io",
-      "X-TestRail-Username": "h@h.com",
-      "X-TestRail-API-Key": "hkey",
-    });
-    expect(propsFromHeaders(headers)).toEqual({
-      testrailUrl: "https://h.testrail.io",
-      testrailUsername: "h@h.com",
-      testrailApiKey: "hkey",
-      testrailPassword: undefined,
-    });
-  });
-
-  it("configView never exposes the secret", () => {
+describe("configView", () => {
+  it("never exposes the secret", () => {
     const view = configView(FULL_ENV);
     expect(JSON.stringify(view)).not.toContain("corp-key");
     expect(view.auth_method).toBe("api_key");

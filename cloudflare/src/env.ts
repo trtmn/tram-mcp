@@ -13,9 +13,9 @@ export interface Env {
 }
 
 /**
- * Per-connection credentials extracted from HTTP headers on the MCP request.
- * Lets each client bring its own TestRail instance/login instead of (or in
- * addition to) the Worker-level secrets.
+ * Per-connection TestRail credentials. Under the OAuth flow these are the grant
+ * `props` (set by the /authorize handler and surfaced as `McpAgent.props`);
+ * resolution falls back to the Worker env vars only when a grant supplies none.
  */
 export interface ConnectionProps {
   testrailUrl?: string;
@@ -23,15 +23,6 @@ export interface ConnectionProps {
   testrailApiKey?: string;
   testrailPassword?: string;
   [key: string]: unknown;
-}
-
-export function propsFromHeaders(headers: Headers): ConnectionProps {
-  return {
-    testrailUrl: headers.get("X-TestRail-URL") ?? undefined,
-    testrailUsername: headers.get("X-TestRail-Username") ?? undefined,
-    testrailApiKey: headers.get("X-TestRail-API-Key") ?? undefined,
-    testrailPassword: headers.get("X-TestRail-Password") ?? undefined,
-  };
 }
 
 export interface TestRailCredentials {
@@ -95,9 +86,9 @@ export function checkConfig(env: Env, props?: ConnectionProps): string | null {
   if (missing.length === 0) return null;
   return (
     `Missing TestRail configuration: ${missing.join(", ")}. ` +
-    "Provide these as Worker secrets (wrangler secret put <NAME>) or as " +
-    "per-client HTTP headers (X-TestRail-URL, X-TestRail-Username, " +
-    "X-TestRail-API-Key or X-TestRail-Password) in the MCP client config."
+    "Reconnect the MCP server and complete the TestRail login form during the " +
+    "OAuth authorization step to provide your instance URL, username, and API " +
+    "key or password."
   );
 }
 

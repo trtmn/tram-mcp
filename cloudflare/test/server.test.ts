@@ -186,12 +186,12 @@ describe("MCP server", () => {
     expect(data.hint).toMatch(/rejected the credentials/);
   });
 
-  it("uses per-request header credentials to authenticate", async () => {
+  it("uses the connection's OAuth grant credentials to authenticate", async () => {
     const fetchMock = vi.fn(
       async () => new Response(JSON.stringify([{ id: 1 }]), { status: 200 }),
     );
     vi.stubGlobal("fetch", fetchMock);
-    // No Worker env creds; the client brings its own via headers.
+    // No Worker env creds; the credentials arrive as the connection's grant props.
     const { client } = await startServer({} as unknown as Env, {
       testrailUrl: "https://mine.testrail.io",
       testrailUsername: "me@me.com",
