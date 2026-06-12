@@ -115,6 +115,53 @@ def endpoint_template(node: ast.expr) -> tuple[str, list[str]] | None:
     return None
 
 
+def resolve_name_endpoint(
+    func: ast.FunctionDef, var_name: str
+) -> tuple[str, list[str], list[str]] | None:
+    """Resolve a variable used as an endpoint into (template, required, optional).
+
+    Handles the "optional trailing path param" idiom introduced in
+    testrail_api_module 0.8.0::
+
+        endpoint = "get_users"
+        if project_id is not None:
+            endpoint = f"get_users/{project_id}"
+        return self._get(endpoint)
+
+    Every assignment to ``var_name`` must resolve to a static template (a bare
+    string or an f-string). The richest template (most path params) becomes the
+    canonical endpoint; a param missing from any branch is optional, and every
+    branch must equal the canonical template with its missing optional
+    ``/{name}`` segments stripped. Anything that doesn't fit this shape returns
+    None so the method stays "unsupported" rather than dispatching incorrectly.
+    """
+    candidates: list[tuple[str, list[str]]] = []
+    for node in ast.walk(func):
+        if not isinstance(node, ast.Assign):
+            continue
+        if not any(isinstance(t, ast.Name) and t.id == var_name for t in node.targets):
+            continue
+        tpl = endpoint_template(node.value)
+        if tpl is None:
+            return None  # a non-static assignment — can't dispatch safely
+        candidates.append(tpl)
+    if not candidates:
+        return None
+
+    canonical_tpl, canonical_names = max(candidates, key=lambda c: (len(c[1]), len(c[0])))
+    required = [n for n in canonical_names if all(n in names for _, names in candidates)]
+    optional = [n for n in canonical_names if n not in required]
+
+    for tpl_str, names in candidates:
+        expected = canonical_tpl
+        for opt in optional:
+            if opt not in names:
+                expected = expected.replace(f"/{{{opt}}}", "")
+        if expected != tpl_str:
+            return None  # not a clean trailing-optional family
+    return canonical_tpl, required, optional
+
+
 def extract_http_calls(func: ast.FunctionDef) -> list[dict[str, Any]]:
     """Find self._get / self._post / self._api_request calls in a method body."""
     calls: list[dict[str, Any]] = []
@@ -139,12 +186,25 @@ def extract_http_calls(func: ast.FunctionDef) -> list[dict[str, Any]]:
             verb = "GET" if f.attr == "_get" else "POST"
             endpoint_node = node.args[0] if node.args else None
         uses_files = any(kw.arg == "files" for kw in node.keywords if kw.arg)
-        tpl = endpoint_template(endpoint_node) if endpoint_node is not None else None
+        template: str | None = None
+        path_params: list[str] = []
+        optional_params: list[str] = []
+        if endpoint_node is not None:
+            tpl = endpoint_template(endpoint_node)
+            if tpl is not None:
+                template, path_params = tpl
+            elif isinstance(endpoint_node, ast.Name):
+                # The endpoint is a local variable — resolve the conditional
+                # "optional trailing path param" idiom from its assignments.
+                resolved = resolve_name_endpoint(func, endpoint_node.id)
+                if resolved is not None:
+                    template, path_params, optional_params = resolved
         calls.append(
             {
                 "verb": verb,
-                "template": tpl[0] if tpl else None,
-                "path_params": tpl[1] if tpl else [],
+                "template": template,
+                "path_params": path_params,
+                "optional_path_params": optional_params,
                 "uses_files": uses_files,
             }
         )
@@ -211,11 +271,14 @@ def build_catalog(src_dir: Path) -> dict[str, Any]:
                     "Cloudflare Worker deployment."
                 )
             elif len(usable) == 1 and len(calls) == 1:
-                entry["http"] = {
+                http: dict[str, Any] = {
                     "verb": usable[0]["verb"],
                     "endpoint": usable[0]["template"],
                     "pathParams": usable[0]["path_params"],
                 }
+                if usable[0].get("optional_path_params"):
+                    http["optionalPathParams"] = usable[0]["optional_path_params"]
+                entry["http"] = http
             elif not calls:
                 entry["unsupported"] = (
                     "Composite helper with no direct API call; use the underlying "

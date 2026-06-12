@@ -53,6 +53,17 @@ describe("catalog", () => {
     }
   });
 
+  it("models users.get_users optional project_id as an optional path param", () => {
+    // testrail_api_module 0.8.0 made get_users' endpoint conditional
+    // ("get_users" vs "get_users/{project_id}"). The generator must resolve
+    // that idiom into an optional path param rather than marking it unsupported.
+    const m = CATALOG.users.methods.get_users;
+    expect(m.http, "get_users should be dispatchable").toBeDefined();
+    expect(m.http!.endpoint).toBe("get_users/{project_id}");
+    expect(m.http!.pathParams).toEqual([]);
+    expect(m.http!.optionalPathParams).toEqual(["project_id"]);
+  });
+
   it("every method has exactly one of http / unsupported (XOR invariant)", () => {
     // Guards against the generator and the TypeScript union drifting apart,
     // since catalog.json is cast unvalidated at load.
@@ -137,5 +148,18 @@ describe("dispatchMethod", () => {
       params: { project_id: 1, suite_id: null, section_id: undefined },
     });
     expect(calls[0].query).toEqual({});
+  });
+
+  it("fills an optional path param when provided (get_users/{project_id})", async () => {
+    const { calls, client } = fakeClient();
+    await dispatchMethod(client, "users", "get_users", { params: { project_id: 9 } });
+    expect(calls).toEqual([{ verb: "GET", endpoint: "get_users/9", query: {} }]);
+  });
+
+  it("strips the optional path segment when the param is omitted", async () => {
+    const { calls, client } = fakeClient();
+    await dispatchMethod(client, "users", "get_users", { params: {} });
+    // project_id must NOT leak into the query string — it's a path param.
+    expect(calls).toEqual([{ verb: "GET", endpoint: "get_users", query: {} }]);
   });
 });

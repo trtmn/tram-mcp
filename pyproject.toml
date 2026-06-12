@@ -21,7 +21,7 @@ classifiers = [
 ]
 dependencies = [
     "fastmcp>=3.3.1,<4",
-    "testrail-api-module==0.7.6",
+    "testrail-api-module==0.8.0",
 ]
 
 [project.urls]

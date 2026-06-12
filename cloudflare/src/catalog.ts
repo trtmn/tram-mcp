@@ -12,6 +12,13 @@ export interface CatalogHttp {
   verb: "GET" | "POST";
   endpoint: string;
   pathParams: string[];
+  /**
+   * Path params that are part of the endpoint template but optional (the
+   * underlying method builds the URL conditionally, e.g. `get_users` vs
+   * `get_users/{project_id}`). When provided they fill the template; when
+   * omitted the `/{name}` segment is stripped. Absent when there are none.
+   */
+  optionalPathParams?: string[];
 }
 
 /**
@@ -115,6 +122,19 @@ export async function dispatchMethod(
       );
     }
     endpoint = endpoint.replace(`{${name}}`, encodeURIComponent(String(value)));
+    delete params[name];
+  }
+
+  // Optional path params fill the template when present; otherwise the
+  // `/{name}` segment is removed so the request hits the base endpoint. Either
+  // way the value is consumed here so it never leaks into the query/body.
+  for (const name of http.optionalPathParams ?? []) {
+    const value = params[name];
+    if (value === undefined || value === null) {
+      endpoint = endpoint.replace(`/{${name}}`, "");
+    } else {
+      endpoint = endpoint.replace(`{${name}}`, encodeURIComponent(String(value)));
+    }
     delete params[name];
   }
 
