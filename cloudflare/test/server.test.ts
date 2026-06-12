@@ -14,27 +14,18 @@ const ENV = {
 
 interface Harness {
   client: Client;
-  stored: { creds?: ConnectionProps };
 }
 
 async function startServer(env: Env = ENV, props?: ConnectionProps): Promise<Harness> {
-  const stored: { creds?: ConnectionProps } = {};
   const server = new McpServer({ name: "TestRail MCP", version: "test" });
-  registerTools(server, {
-    env,
-    props,
-    getStoredCreds: () => stored.creds,
-    storeCreds: (creds) => {
-      stored.creds = creds;
-    },
-  });
+  registerTools(server, { env, props });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: "test-client", version: "0.0.0" });
   await Promise.all([
     server.connect(serverTransport),
     client.connect(clientTransport),
   ]);
-  return { client, stored };
+  return { client };
 }
 
 function textOf(result: unknown): unknown {
@@ -62,19 +53,8 @@ describe("MCP server", () => {
         "list_testrail_projects",
         "run_testrail_command",
         "search_test_cases",
-        "setup_testrail_connection",
       ].sort(),
     );
-  });
-
-  it("renders auth_method as an enum (dropdown) in setup_testrail_connection", async () => {
-    const { client } = await startServer();
-    const { tools } = await client.listTools();
-    const setup = tools.find((t) => t.name === "setup_testrail_connection")!;
-    const schema = setup.inputSchema as {
-      properties: Record<string, { enum?: string[] }>;
-    };
-    expect(schema.properties.auth_method.enum).toEqual(["api_key", "password"]);
   });
 
   it("browse_testrail_api returns categories with methods", async () => {
@@ -206,40 +186,26 @@ describe("MCP server", () => {
     expect(data.hint).toMatch(/rejected the credentials/);
   });
 
-  it("setup_testrail_connection stores credentials used by later calls", async () => {
+  it("uses per-request header credentials to authenticate", async () => {
     const fetchMock = vi.fn(
-      async () => new Response(JSON.stringify([]), { status: 200 }),
+      async () => new Response(JSON.stringify([{ id: 1 }]), { status: 200 }),
     );
     vi.stubGlobal("fetch", fetchMock);
-    const { client, stored } = await startServer();
-
-    await client.callTool({
-      name: "setup_testrail_connection",
-      arguments: {
-        instance_url: "https://mine.testrail.io",
-        username: "me@me.com",
-        auth_method: "password",
-        secret: "hunter2",
-      },
-    });
-    expect(stored.creds).toEqual({
+    // No Worker env creds; the client brings its own via headers.
+    const { client } = await startServer({} as unknown as Env, {
       testrailUrl: "https://mine.testrail.io",
       testrailUsername: "me@me.com",
-      testrailApiKey: undefined,
-      testrailPassword: "hunter2",
+      testrailApiKey: "header-key",
     });
-
     const result = await client.callTool({ name: "check_testrail_auth", arguments: {} });
     const data = textOf(result) as { ok: boolean; config: Record<string, unknown> };
     expect(data.ok).toBe(true);
     expect(data.config.url).toBe("https://mine.testrail.io");
-    expect(data.config.username).toBe("me@me.com");
-    expect(data.config.auth_method).toBe("password");
-    // The actual request authenticated with the stored password.
+    expect(data.config.credential_source).toBe("per-client");
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(String(url)).toContain("https://mine.testrail.io");
     const headers = init.headers as Record<string, string>;
-    expect(headers.Authorization).toBe(`Basic ${btoa("me@me.com:hunter2")}`);
+    expect(headers.Authorization).toBe(`Basic ${btoa("me@me.com:header-key")}`);
   });
 
   it("add_result_for_case maps status names to status ids", async () => {
@@ -368,34 +334,6 @@ describe("MCP server", () => {
     });
     // Zod rejects the enum value before any TestRail call is made.
     expect((result as { isError?: boolean }).isError).toBe(true);
-  });
-
-  it("stored credentials take precedence over per-request header props", async () => {
-    const fetchMock = vi.fn(
-      async () => new Response(JSON.stringify([]), { status: 200 }),
-    );
-    vi.stubGlobal("fetch", fetchMock);
-    // Request arrives with one identity's headers...
-    const { client } = await startServer(ENV, {
-      testrailUrl: "https://header.testrail.io",
-      testrailUsername: "header@me.com",
-      testrailApiKey: "header-key",
-    });
-    // ...but the session was explicitly configured with another.
-    await client.callTool({
-      name: "setup_testrail_connection",
-      arguments: {
-        instance_url: "https://stored.testrail.io",
-        username: "stored@me.com",
-        auth_method: "api_key",
-        secret: "stored-key",
-      },
-    });
-    await client.callTool({ name: "check_testrail_auth", arguments: {} });
-    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
-    expect(String(url)).toContain("https://stored.testrail.io");
-    const headers = init.headers as Record<string, string>;
-    expect(headers.Authorization).toBe(`Basic ${btoa("stored@me.com:stored-key")}`);
   });
 
   it("get_run_summary skips the failed-tests fetch when there are no failures", async () => {

@@ -1,11 +1,15 @@
+import type { OAuthHelpers } from "@cloudflare/workers-oauth-provider";
+
 export interface Env {
   MCP_OBJECT: DurableObjectNamespace;
+  /** KV namespace required by workers-oauth-provider for token/grant storage. */
+  OAUTH_KV: KVNamespace;
+  /** OAuth helper API injected by the OAuthProvider wrapper into handler env. */
+  OAUTH_PROVIDER: OAuthHelpers;
   TESTRAIL_URL?: string;
   TESTRAIL_USERNAME?: string;
   TESTRAIL_API_KEY?: string;
   TESTRAIL_PASSWORD?: string;
-  /** Optional bearer token clients must present in the Authorization header. */
-  MCP_AUTH_TOKEN?: string;
 }
 
 /**

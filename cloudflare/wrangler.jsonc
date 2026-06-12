@@ -18,12 +18,17 @@
       "new_sqlite_classes": ["TestRailMCP"]
     }
   ],
+  "kv_namespaces": [
+    {
+      "binding": "OAUTH_KV",
+      "id": "001e119e85f4481db4da23621c1054ad"
+    }
+  ],
   "observability": {
     "enabled": true
   }
-  // Secrets (set with `wrangler secret put <NAME>`):
-  //   TESTRAIL_URL       e.g. https://yourinstance.testrail.io
-  //   TESTRAIL_USERNAME  TestRail login email
-  //   TESTRAIL_API_KEY   API key (or TESTRAIL_PASSWORD)
-  //   MCP_AUTH_TOKEN     optional bearer token required from MCP clients
+  // OAUTH_KV stores OAuth grants/tokens. Grant props (TestRail credentials) are
+  // encrypted by workers-oauth-provider with the access token as key material —
+  // Cloudflare holds no decryption key and cannot read them. No secrets are
+  // required; clients authenticate via the OAuth flow at /authorize.
 }

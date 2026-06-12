@@ -1,42 +1,25 @@
-import { checkAuth } from "./auth";
-import type { Env } from "./env";
-import { propsFromHeaders } from "./env";
-import { TestRailMCP, VERSION } from "./mcp";
+import OAuthProvider from "@cloudflare/workers-oauth-provider";
+
+import { defaultHandler } from "./authorize";
+import { TestRailMCP } from "./mcp";
 
 export { TestRailMCP };
 
-export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    const url = new URL(request.url);
-
-    if (url.pathname === "/" || url.pathname === "/health") {
-      return Response.json({
-        name: "TestRail MCP",
-        version: VERSION,
-        status: "ok",
-        endpoints: { mcp: "/mcp", sse: "/sse" },
-      });
-    }
-
-    const denied = await checkAuth(request, env);
-    if (denied) return denied;
-
-    // Per-connection TestRail credentials may arrive as headers; McpAgent
-    // exposes them to tools via this.props.
-    (ctx as ExecutionContext & { props: unknown }).props = propsFromHeaders(
-      request.headers,
-    );
-
-    if (url.pathname === "/mcp") {
-      return TestRailMCP.serve("/mcp").fetch(request, env, ctx);
-    }
-    if (url.pathname === "/sse" || url.pathname === "/sse/message") {
-      return TestRailMCP.serveSSE("/sse").fetch(request, env, ctx);
-    }
-
-    return Response.json(
-      { error: "Not found. MCP endpoint is /mcp (streamable HTTP) or /sse." },
-      { status: 404 },
-    );
+/**
+ * The Worker is wrapped in an OAuth 2.1 provider so it authenticates the way
+ * remote MCP clients expect — Claude.ai supports *only* OAuth for custom
+ * connectors (no custom headers), and Claude Code drives the same flow. The
+ * `/authorize` page (see ./authorize) collects TestRail credentials; the
+ * provider stores them encrypted-by-token (no key on Cloudflare) and injects
+ * them as `ctx.props` → `TestRailMCP.props` on each authenticated request.
+ */
+export default new OAuthProvider({
+  apiHandlers: {
+    "/mcp": TestRailMCP.serve("/mcp"),
+    "/sse": TestRailMCP.serveSSE("/sse"),
   },
-} satisfies ExportedHandler<Env>;
+  defaultHandler,
+  authorizeEndpoint: "/authorize",
+  tokenEndpoint: "/token",
+  clientRegistrationEndpoint: "/register",
+});

@@ -13,9 +13,9 @@ export const SERVER_INSTRUCTIONS =
   "quality assurance, test management, or test reporting. " +
   "If a TestRail API call fails or you suspect credentials are wrong, " +
   "call check_testrail_auth first — it returns a structured diagnosis. " +
-  "If it reports missing configuration, offer setup_testrail_connection to " +
-  "configure the instance URL, username, and API key or password for this " +
-  "session. " +
+  "If it reports missing configuration, the MCP client must supply TestRail " +
+  "credentials via the X-TestRail-URL, X-TestRail-Username, and " +
+  "X-TestRail-API-Key (or X-TestRail-Password) request headers. " +
   "Start with browse_testrail_api to discover available categories, " +
   "then describe_testrail_method to learn how to call a specific method, " +
   "then run_testrail_command to execute it. " +
@@ -37,21 +37,11 @@ export interface ToolContext {
   env: Env;
   /** Credentials from per-request HTTP headers, if any. */
   props?: ConnectionProps;
-  /** Credentials saved via setup_testrail_connection, if any. */
-  getStoredCreds?: () => ConnectionProps | undefined;
-  /** Persist credentials provided via setup_testrail_connection. */
-  storeCreds?: (creds: ConnectionProps) => void | Promise<void>;
 }
 
-/** Effective per-connection credentials: tool-configured > request headers. */
+/** Effective per-connection credentials: per-request headers (or Worker env). */
 function effectiveProps(ctx: ToolContext): ConnectionProps | undefined {
-  const stored = ctx.getStoredCreds?.();
-  if (!stored) return ctx.props;
-  const merged: ConnectionProps = { ...(ctx.props ?? {}) };
-  for (const [key, value] of Object.entries(stored)) {
-    if (value !== undefined && value !== null && value !== "") merged[key] = value;
-  }
-  return merged;
+  return ctx.props;
 }
 
 type ToolResult = {
@@ -131,61 +121,6 @@ function hintFor(status: number | null, message: string): string {
 }
 
 export function registerTools(server: McpServer, ctx: ToolContext): void {
-  if (ctx.storeCreds) {
-    server.registerTool(
-      "setup_testrail_connection",
-      {
-        title: "Set Up TestRail Connection",
-        description:
-          "Configure the TestRail instance and login this session should " +
-          "use. Saves the instance URL, username, auth method (API key or " +
-          "password), and secret for this connection, overriding any " +
-          "server-wide defaults. Run check_testrail_auth afterwards to " +
-          "verify the login works. Ask the user for their TestRail " +
-          "instance URL, email/username, and whether they want to " +
-          "authenticate with an API key (recommended) or their password.",
-        inputSchema: {
-          instance_url: z
-            .string()
-            .url()
-            .describe(
-              "TestRail instance URL (e.g. https://yourcompany.testrail.io).",
-            ),
-          username: z
-            .string()
-            .describe("TestRail login email/username."),
-          auth_method: z
-            .enum(["api_key", "password"])
-            .describe(
-              "How to authenticate: 'api_key' (recommended — generate one " +
-                "under My Settings > API Keys in TestRail) or 'password'.",
-            ),
-          secret: z
-            .string()
-            .min(1)
-            .describe("The API key or password value, matching auth_method."),
-        },
-        annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
-      },
-      async ({ instance_url, username, auth_method, secret }) => {
-        const creds: ConnectionProps = {
-          testrailUrl: instance_url,
-          testrailUsername: username,
-          testrailApiKey: auth_method === "api_key" ? secret : undefined,
-          testrailPassword: auth_method === "password" ? secret : undefined,
-        };
-        await ctx.storeCreds?.(creds);
-        return jsonResult({
-          status: "saved",
-          config: configView(ctx.env, effectiveProps(ctx)),
-          hint:
-            "Connection settings saved for this session. Call " +
-            "check_testrail_auth to verify the credentials work.",
-        });
-      },
-    );
-  }
-
   server.registerTool(
     "check_testrail_auth",
     {
