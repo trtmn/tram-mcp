@@ -133,10 +133,15 @@ jobs:
           TAG: ${{ needs.release-please.outputs.tag_name }}
           VERSION: ${{ needs.release-please.outputs.version }}
         run: |
+          # `--merge` is used WITHOUT `--auto` on purpose: `main` is a pure mirror
+          # of `development` and its ruleset enforces no required status checks
+          # (only no-delete / no-force-push). Validation already ran on `development`
+          # via tests.yml (push + PR), so there is no checks-gate for `--auto` to wait
+          # on — an immediate merge is correct here. Do not "restore" `--auto`.
           existing=$(gh pr list --repo "$REPO" --base main --head development --state open --json number -q '.[0].number' || echo "")
           if [ -n "$existing" ]; then
-            echo "Sync PR #$existing already open; enabling auto-merge on it."
-            gh pr merge "$existing" --repo "$REPO" --auto --merge
+            echo "Sync PR #$existing already open; merging it."
+            gh pr merge "$existing" --repo "$REPO" --merge
             exit 0
           fi
           pr_url=$(gh pr create \
@@ -144,5 +149,5 @@ jobs:
             --base main \
             --head development \
             --title "release: sync $TAG to main" \
-            --body "Auto-opened by release-please after publishing $TAG to PyPI. Auto-merging once required Tests checks pass; main is just a mirror of the published tag. See the release: https://github.com/$REPO/releases/tag/$TAG and the PyPI page: https://pypi.org/project/tram-mcp/$VERSION/")
-          gh pr merge "$pr_url" --repo "$REPO" --auto --merge
+            --body "Auto-opened by release-please after publishing $TAG to PyPI. Merging immediately — code was already validated on the development branch. See the release: https://github.com/$REPO/releases/tag/$TAG and the PyPI page: https://pypi.org/project/tram-mcp/$VERSION/")
+          gh pr merge "$pr_url" --repo "$REPO" --merge
