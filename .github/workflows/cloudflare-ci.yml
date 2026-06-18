@@ -1,0 +1,42 @@
+name: Cloudflare Worker CI
+
+on:
+  push:
+    branches: [main, development]
+    paths:
+      - 'cloudflare/**'
+      - '.github/workflows/cloudflare-ci.yml'
+  pull_request:
+    branches: [main, development]
+    paths:
+      - 'cloudflare/**'
+      - '.github/workflows/cloudflare-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Cloudflare Worker (TypeScript)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cloudflare
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cloudflare/package-lock.json
+
+      - run: npm ci
+
+      # worker-configuration.d.ts is gitignored and generated from wrangler.jsonc;
+      # tsc --noEmit needs it to exist.
+      - run: npx wrangler types
+
+      - run: npx tsc --noEmit
+
+      - run: npx vitest run

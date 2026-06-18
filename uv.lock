@@ -1176,14 +1176,14 @@ wheels = [
 
 [[package]]
 name = "testrail-api-module"
-version = "0.7.6"
+version = "0.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/61/5e/5b7d430ac075a43babd521096e82887c725c34bceb854a06e1c67c4acc22/testrail_api_module-0.7.6.tar.gz", hash = "sha256:54f17c6b597d33ec3b5a85abc12e96d12ca6707015ecea2d06863a9d5d74fe46", size = 74428, upload-time = "2026-05-22T23:37:20.382Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f4/5c/071d24f1ddca98f59228982bbb16f70f4d80cc07b04d5bba6f8c0b4366f2/testrail_api_module-0.8.0.tar.gz", hash = "sha256:8490a87b2eb9b87a5766f9501e1b2f43ff5e6f3d29be5d17ae0ab013cbf7c87f", size = 95628, upload-time = "2026-06-11T15:49:55.5Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/34/7d/e066feb8e24ba127afbe8ff8217fb7293e4a6e11366d75c517cc167f1b21/testrail_api_module-0.7.6-py3-none-any.whl", hash = "sha256:96c20924a310b86f1e68448d6f54943f3cf8a3b656976d99425d1b0440450b72", size = 71317, upload-time = "2026-05-22T23:37:19.069Z" },
+    { url = "https://files.pythonhosted.org/packages/89/58/168e8bf885649f36bfdd0187c359592685ced394b795a895d4957d6e2aad/testrail_api_module-0.8.0-py3-none-any.whl", hash = "sha256:3707acd3e015c7cd877195d2ce5894d500b65b3b47392d360fa7310363be6960", size = 80015, upload-time = "2026-06-11T15:49:54.314Z" },
 ]
 
 [[package]]
@@ -1203,7 +1203,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastmcp", specifier = ">=3.3.1,<4" },
-    { name = "testrail-api-module", specifier = "==0.7.6" },
+    { name = "testrail-api-module", specifier = "==0.8.0" },
 ]
 
 [package.metadata.requires-dev]

@@ -1,0 +1,34 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tram-mcp",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-05-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "MCP_OBJECT",
+        "class_name": "TestRailMCP"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["TestRailMCP"]
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "OAUTH_KV",
+      "id": "001e119e85f4481db4da23621c1054ad"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+  // OAUTH_KV stores OAuth grants/tokens. Grant props (TestRail credentials) are
+  // encrypted by workers-oauth-provider with the access token as key material —
+  // Cloudflare holds no decryption key and cannot read them. No secrets are
+  // required; clients authenticate via the OAuth flow at /authorize.
+}

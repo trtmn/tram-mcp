@@ -1,0 +1,35 @@
+name: Deploy Cloudflare Worker
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cloudflare
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cloudflare/package-lock.json
+
+      - run: npm ci
+
+      # worker-configuration.d.ts is gitignored and generated from wrangler.jsonc;
+      # tsc --noEmit needs it to exist.
+      - run: npx wrangler types
+
+      - run: npx tsc --noEmit
+
+      - run: npx vitest run
+
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          workingDirectory: cloudflare
