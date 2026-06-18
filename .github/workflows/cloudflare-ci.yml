@@ -1,10 +1,23 @@
-name: Deploy Cloudflare Worker
+name: Cloudflare Worker CI
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main, development]
+    paths:
+      - 'cloudflare/**'
+      - '.github/workflows/cloudflare-ci.yml'
+  pull_request:
+    branches: [main, development]
+    paths:
+      - 'cloudflare/**'
+      - '.github/workflows/cloudflare-ci.yml'
+
+permissions:
+  contents: read
 
 jobs:
-  deploy:
+  test:
+    name: Cloudflare Worker (TypeScript)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -27,9 +40,3 @@ jobs:
       - run: npx tsc --noEmit
 
       - run: npx vitest run
-
-      - name: Deploy
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          workingDirectory: cloudflare
