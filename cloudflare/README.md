@@ -62,7 +62,7 @@ KV namespace is needed for local development**; storage is simulated on disk.
 ```bash
 npm install
 npm run check      # tsc --noEmit
-npm test           # vitest (68 tests)
+npm test           # vitest (71 tests)
 npm run dev        # wrangler dev → http://localhost:8787
 ```
 
@@ -75,6 +75,47 @@ Regenerate the endpoint catalog after `testrail_api_module` changes:
 ```bash
 npm run catalog    # python3 scripts/generate_catalog.py [path-to-module-src]
 ```
+
+## Run locally over stdio (no Cloudflare)
+
+The same shared core (tools, dispatch, catalog) also runs as a local **stdio**
+MCP server — the transport an MCP client spawns as a child process and talks to
+over stdin/stdout. This is the drop-in for a local/desktop setup.
+
+```bash
+npm install
+npm run build:stdio    # esbuild → dist/stdio.js (the `tram-mcp` bin)
+```
+
+**Authentication is by environment variables, not OAuth.** OAuth 2.1 is the
+*remote* model — it needs HTTP endpoints and a browser redirect, which a stdio
+process doesn't have. A local stdio server authenticates the standard way: the
+client passes `TESTRAIL_*` env vars when it launches the process. Both paths
+resolve through the same `getCredentials()` in `src/env.ts` — OAuth fills the
+grant `props` on the Worker; stdio leaves `props` undefined and falls back to
+the environment.
+
+Example Claude Desktop / Claude Code config:
+
+```json
+{
+  "mcpServers": {
+    "testrail": {
+      "command": "node",
+      "args": ["/abs/path/to/dist/stdio.js"],
+      "env": {
+        "TESTRAIL_URL": "https://yourinstance.testrail.io",
+        "TESTRAIL_USERNAME": "you@corp.com",
+        "TESTRAIL_API_KEY": "your-api-key"
+      }
+    }
+  }
+}
+```
+
+Either `TESTRAIL_API_KEY` (recommended) or `TESTRAIL_PASSWORD` must be set. If
+you want the OAuth flow on your own machine instead, use the HTTP transport via
+`npm run dev` (above) rather than the stdio bin.
 
 ## Deploy / self-host
 
