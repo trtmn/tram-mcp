@@ -14,8 +14,8 @@ export const SERVER_INSTRUCTIONS =
   "If a TestRail API call fails or you suspect credentials are wrong, " +
   "call check_testrail_auth first — it returns a structured diagnosis. " +
   "If it reports missing configuration, the connection is not authenticated — " +
-  "the user should reconnect the server and complete the TestRail login form " +
-  "shown during the OAuth authorization step. " +
+  "the user should provide TestRail credentials: remote servers show a login " +
+  "form when reconnecting, and the local server is set up with `tram-mcp login`. " +
   "Start with browse_testrail_api to discover available categories, " +
   "then describe_testrail_method to learn how to call a specific method, " +
   "then run_testrail_command to execute it. " +
@@ -146,9 +146,9 @@ export function registerTools(server: McpServer, ctx: ToolContext): void {
           error: configError,
           error_class: "ConfigurationError",
           hint:
-            "Reconnect the server and complete the TestRail login form in the " +
-            "OAuth authorization step (instance URL, username, and an API key " +
-            "or password).",
+            "Provide TestRail credentials (instance URL, username, and an API key " +
+            "or password): remote servers show a login form on reconnect; the " +
+            "local server is configured with `tram-mcp login`.",
           config,
         });
       }
