@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { pathToFileURL } from "node:url";
 
+import { loadCredentials } from "./credstore";
 import type { Env } from "./env";
 import { registerTools, SERVER_INSTRUCTIONS } from "./tools";
 import { VERSION } from "./version";
@@ -29,8 +30,37 @@ export function envFromProcess(processEnv: NodeJS.ProcessEnv = process.env): Env
   } as Env;
 }
 
+/** True when process.env supplies a complete TestRail credential set. */
+function envIsComplete(e: NodeJS.ProcessEnv): boolean {
+  return !!(
+    e.TESTRAIL_URL &&
+    e.TESTRAIL_USERNAME &&
+    (e.TESTRAIL_API_KEY || e.TESTRAIL_PASSWORD)
+  );
+}
+
+/**
+ * Resolve local credentials with precedence: a complete process.env set wins
+ * (preserving .env / op run / CI); otherwise the wizard-populated credential
+ * store; otherwise an empty Env (tools return a "run `tram-mcp login`" message
+ * at call time).
+ */
+export function resolveLocalEnv(processEnv: NodeJS.ProcessEnv = process.env): Env {
+  if (envIsComplete(processEnv)) return envFromProcess(processEnv);
+  const stored = loadCredentials();
+  if (stored) {
+    return {
+      TESTRAIL_URL: stored.url,
+      TESTRAIL_USERNAME: stored.username,
+      TESTRAIL_API_KEY: stored.auth_method === "api_key" ? stored.secret : undefined,
+      TESTRAIL_PASSWORD: stored.auth_method === "password" ? stored.secret : undefined,
+    } as Env;
+  }
+  return envFromProcess(processEnv);
+}
+
 /** Build a fully-wired McpServer for local stdio use. */
-export function buildStdioServer(env: Env = envFromProcess()): McpServer {
+export function buildStdioServer(env: Env = resolveLocalEnv()): McpServer {
   const server = new McpServer(
     { name: "TestRail MCP", version: VERSION },
     { instructions: SERVER_INSTRUCTIONS },
@@ -41,7 +71,7 @@ export function buildStdioServer(env: Env = envFromProcess()): McpServer {
 }
 
 export async function main(): Promise<void> {
-  const server = buildStdioServer();
+  const server = buildStdioServer(resolveLocalEnv());
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }

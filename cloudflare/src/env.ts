@@ -84,12 +84,16 @@ export function checkConfig(env: Env, props?: ConnectionProps): string | null {
     missing.push("TESTRAIL_API_KEY or TESTRAIL_PASSWORD");
   }
   if (missing.length === 0) return null;
-  return (
-    `Missing TestRail configuration: ${missing.join(", ")}. ` +
-    "Reconnect the MCP server and complete the TestRail login form during the " +
-    "OAuth authorization step to provide your instance URL, username, and API " +
-    "key or password."
-  );
+  // The guidance differs by transport: the Worker (OAUTH_PROVIDER bound) points
+  // at the OAuth login form; a local stdio run points at `tram-mcp login`.
+  const hint = env.OAUTH_PROVIDER
+    ? "Reconnect the MCP server and complete the TestRail login form during the " +
+      "OAuth authorization step to provide your instance URL, username, and API " +
+      "key or password."
+    : "Run `tram-mcp login` to enter your TestRail URL, username, and API key — " +
+      "or set TESTRAIL_URL, TESTRAIL_USERNAME, and TESTRAIL_API_KEY (or " +
+      "TESTRAIL_PASSWORD) in the environment.";
+  return `Missing TestRail configuration: ${missing.join(", ")}. ${hint}`;
 }
 
 export function getCredentials(env: Env, props?: ConnectionProps): TestRailCredentials {

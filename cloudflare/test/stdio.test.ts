@@ -1,6 +1,10 @@
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { buildStdioServer, envFromProcess } from "../src/stdio";
 
@@ -64,5 +68,60 @@ describe("buildStdioServer", () => {
     const client = await connect(buildStdioServer(envFromProcess({} as NodeJS.ProcessEnv)));
     const { tools } = await client.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual(EXPECTED_TOOLS);
+  });
+});
+
+describe("resolveLocalEnv", () => {
+  let tmpHome: string;
+  beforeEach(() => {
+    tmpHome = mkdtempSync(join(tmpdir(), "tram-stdio-"));
+    vi.stubEnv("HOME", tmpHome);
+    vi.stubEnv("USERPROFILE", tmpHome);
+  });
+  afterEach(() => vi.unstubAllEnvs());
+
+  async function fresh() {
+    vi.resetModules();
+    return {
+      stdio: await import("../src/stdio"),
+      credstore: await import("../src/credstore"),
+    };
+  }
+
+  it("prefers complete process.env credentials over the stored file", async () => {
+    const { stdio, credstore } = await fresh();
+    credstore.saveCredentials({
+      url: "https://file.testrail.io",
+      username: "file@c",
+      auth_method: "api_key",
+      secret: "fk",
+    });
+    const env = stdio.resolveLocalEnv({
+      TESTRAIL_URL: "https://env.testrail.io",
+      TESTRAIL_USERNAME: "env@c",
+      TESTRAIL_API_KEY: "ek",
+    } as NodeJS.ProcessEnv);
+    expect(env.TESTRAIL_URL).toBe("https://env.testrail.io");
+    expect(env.TESTRAIL_API_KEY).toBe("ek");
+  });
+
+  it("falls back to the stored file when process.env is incomplete", async () => {
+    const { stdio, credstore } = await fresh();
+    credstore.saveCredentials({
+      url: "https://file.testrail.io",
+      username: "file@c",
+      auth_method: "password",
+      secret: "fp",
+    });
+    const env = stdio.resolveLocalEnv({} as NodeJS.ProcessEnv);
+    expect(env.TESTRAIL_URL).toBe("https://file.testrail.io");
+    expect(env.TESTRAIL_PASSWORD).toBe("fp");
+    expect(env.TESTRAIL_API_KEY).toBeUndefined();
+  });
+
+  it("yields empty credentials when neither source is present", async () => {
+    const { stdio } = await fresh();
+    const env = stdio.resolveLocalEnv({} as NodeJS.ProcessEnv);
+    expect(env.TESTRAIL_URL).toBeUndefined();
   });
 });
