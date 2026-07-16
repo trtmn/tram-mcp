@@ -175,6 +175,10 @@ No instance URL, no OAuth, no HTTPS, no editing a JSON config with secrets in it
   stored in plaintext in that protected file.
 - The wizard binds only to `127.0.0.1` on an ephemeral port, serves the form for
   the duration of setup, accepts one successful submission, then shuts down.
+- **CSRF / DNS-rebinding defense:** each session embeds an unguessable token
+  (`randomBytes(32)`) in the form that `/submit` requires (a cross-origin page
+  cannot read it), and the request handler rejects any request whose `Host`
+  header is not the server's own `127.0.0.1:<port>` / `localhost:<port>`.
 - No secret is ever placed on argv, stdout, or in logs.
 - **Deferred enhancement:** OS keychain storage (macOS `security`, Windows
   Credential Manager) by shelling out — explicitly avoiding native modules
