@@ -1,20 +1,46 @@
 {
-  "name": "tram-mcp-worker",
-  "version": "0.1.0",
-  "description": "TestRail MCP server on Cloudflare Workers",
-  "private": true,
+  "name": "tram-mcp",
+  "version": "0.6.0",
+  "description": "TestRail MCP server — browse the API, search test cases, and manage runs and results. Runs locally over stdio or as a remote Cloudflare Worker.",
+  "license": "MIT",
+  "author": "Matt Troutman",
+  "homepage": "https://github.com/trtmn/tram-mcp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trtmn/tram-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/trtmn/tram-mcp/issues"
+  },
+  "keywords": [
+    "testrail",
+    "testing",
+    "qa",
+    "test-management",
+    "mcp",
+    "model-context-protocol"
+  ],
   "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "tram-mcp": "dist/cli.js"
+  },
+  "files": [
+    "dist/cli.js"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "check": "tsc --noEmit",
     "test": "vitest run",
     "catalog": "python3 scripts/generate_catalog.py",
-    "build:stdio": "esbuild src/stdio.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/stdio.js --banner:js='#!/usr/bin/env node'",
-    "build:cli": "esbuild src/cli.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/cli.js --banner:js='#!/usr/bin/env node'"
-  },
-  "bin": {
-    "tram-mcp": "dist/cli.js"
+    "build:cli": "esbuild src/cli.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/cli.js --banner:js='#!/usr/bin/env node'",
+    "prepublishOnly": "npm run build:cli"
   },
   "dependencies": {
     "@cloudflare/workers-oauth-provider": "^0.7.2",

@@ -1,16 +1,13 @@
-name: Cloudflare Worker CI
+name: CI
 
+# Runs on every push/PR to main and development. This is the project's sole test
+# suite now that the Python package is gone, so it is intentionally NOT path-filtered
+# — the sync PR (which only touches version files) must still get a CI run.
 on:
   push:
     branches: [main, development]
-    paths:
-      - 'cloudflare/**'
-      - '.github/workflows/cloudflare-ci.yml'
   pull_request:
     branches: [main, development]
-    paths:
-      - 'cloudflare/**'
-      - '.github/workflows/cloudflare-ci.yml'
 
 permissions:
   contents: read
