@@ -1,0 +1,70 @@
+{
+  "manifest_version": "0.3",
+  "name": "tram-mcp",
+  "version": "0.6.0",
+  "display_name": "TestRail MCP",
+  "description": "Connect Claude to your TestRail instance. Browse the API, search test cases, and manage runs and results — all through natural language. Self-contained Node bundle; no toolchain required.",
+  "author": {
+    "name": "Matt Troutman",
+    "url": "https://github.com/trtmn/tram-mcp"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/trtmn/tram-mcp"
+  },
+  "documentation": "https://github.com/trtmn/tram-mcp#readme",
+  "keywords": ["testrail", "testing", "qa", "test-management", "mcp"],
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.js"],
+      "env": {
+        "TESTRAIL_URL": "${user_config.testrail_url}",
+        "TESTRAIL_USERNAME": "${user_config.testrail_username}",
+        "TESTRAIL_API_KEY": "${user_config.testrail_api_key}"
+      }
+    }
+  },
+  "user_config": {
+    "testrail_url": {
+      "type": "string",
+      "title": "TestRail URL",
+      "description": "Your TestRail instance URL (e.g., https://yourcompany.testrail.io)",
+      "required": true
+    },
+    "testrail_username": {
+      "type": "string",
+      "title": "TestRail Username",
+      "description": "Your TestRail email address",
+      "required": true
+    },
+    "testrail_api_key": {
+      "type": "string",
+      "title": "TestRail API key (or password)",
+      "description": "Generate under My Settings > API Keys in TestRail. Your account password also works.",
+      "required": true,
+      "sensitive": true
+    }
+  },
+  "compatibility": {
+    "claude_desktop": ">=0.10.0",
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
+  },
+  "tools": [
+    { "name": "check_testrail_auth", "description": "Verify TestRail credentials with a structured diagnosis" },
+    { "name": "browse_testrail_api", "description": "List all TestRail API categories and methods" },
+    { "name": "describe_testrail_method", "description": "Parameter/endpoint details for one API method" },
+    { "name": "run_testrail_command", "description": "Execute any TestRail API method" },
+    { "name": "search_test_cases", "description": "Search test cases by title within a project" },
+    { "name": "list_testrail_projects", "description": "Resolve project names to IDs" },
+    { "name": "get_run_summary", "description": "Run status counts, pass rate, and failed-test list" },
+    { "name": "add_result_for_case", "description": "Record pass/fail/blocked/retest with comment & defects" },
+    { "name": "create_test_run", "description": "Start a run for all or selected cases" }
+  ]
+}

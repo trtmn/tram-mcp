@@ -1,6 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { pathToFileURL } from "node:url";
 
 import { loadCredentials } from "./credstore";
 import type { Env } from "./env";
@@ -70,19 +69,12 @@ export function buildStdioServer(env: Env = resolveLocalEnv()): McpServer {
   return server;
 }
 
+// `main` is invoked by the CLI entry (cli.ts -> runStdioServer). This module has
+// NO self-invoke guard on purpose: cli.ts is the sole executable entry, and both
+// bundle into dist/cli.js. Two `import.meta.url === argv[1]` guards in one bundle
+// would both fire and start two servers on the same stdio, so only cli.ts keeps one.
 export async function main(): Promise<void> {
   const server = buildStdioServer(resolveLocalEnv());
   const transport = new StdioServerTransport();
   await server.connect(transport);
-}
-
-// Run only when executed directly (node dist/stdio.js), not when imported by
-// tests. import.meta.url is the module's own URL; argv[1] is the launched file.
-const invokedDirectly =
-  !!process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
-if (invokedDirectly) {
-  main().catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
 }

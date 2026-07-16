@@ -1,176 +1,128 @@
 # TestRail MCP Server
 
-[![Tests](https://github.com/trtmn/tram-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/trtmn/tram-mcp/actions/workflows/tests.yml)
-[![Python 3.11 | 3.12 | 3.13](https://img.shields.io/badge/python-3.11%20|%203.12%20|%203.13-blue?logo=python&logoColor=white)](https://pypi.org/project/tram-mcp/)
-[![PyPI - Version](https://img.shields.io/pypi/v/tram-mcp?label=Latest%20Version)](https://pypi.org/project/tram-mcp/)
-[![PyPI - Downloads](https://img.shields.io/pypi/dm/tram-mcp?color=purple)](https://pypi.org/project/tram-mcp/)
+[![CI](https://github.com/trtmn/tram-mcp/actions/workflows/cloudflare-ci.yml/badge.svg)](https://github.com/trtmn/tram-mcp/actions/workflows/cloudflare-ci.yml)
+[![npm version](https://img.shields.io/npm/v/tram-mcp?label=npm)](https://www.npmjs.com/package/tram-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Connect your AI coding assistant to [TestRail](https://www.testrail.com/) — manage test cases, runs, results, and more directly from VS Code, Cursor, Claude Desktop, or Claude Code. Built on the [Model Context Protocol](https://modelcontextprotocol.io/) and powered by [`testrail_api_module`](https://github.com/trtmn/testrail_api_module).
+Connect Claude to [TestRail](https://www.testrail.com/) — browse the API, search
+test cases, and manage runs and results through natural language. Built on the
+[Model Context Protocol](https://modelcontextprotocol.io/).
 
-## Features
+`tram-mcp` runs **locally over stdio** (this is what most people want) and also
+deploys as a **remote Cloudflare Worker**. Both share one TypeScript core. It's
+distributed as the npm package [`tram-mcp`](https://www.npmjs.com/package/tram-mcp)
+and as a Claude Desktop `.mcpb` bundle.
 
-- **Dynamic tool discovery** — endpoints are introspected from `testrail_api_module` at startup, so new API coverage is picked up automatically
-- **LLM-friendly** — instead of registering hundreds of tools, provides a category-based discovery pattern so models can explore available operations without being overwhelmed
+> **Migrating from the old Python package?** `tram-mcp` is now a Node/npm package,
+> not a PyPI package. Use the install steps below; `uv tool install tram-mcp` /
+> `uvx tram-mcp` no longer apply.
 
 ## Requirements
 
-- Python 3.11+
-- [uv](https://docs.astral.sh/uv/)
+- **Claude Code / the `npx` path:** Node.js ≥ 18.
+- **Claude Desktop `.mcpb`:** nothing — Desktop bundles its own Node runtime.
 
-## Installation
+## Add to Claude Code
 
-### Step 1 — Install `tram-mcp` once
-
-```bash
-uv tool install tram-mcp
-```
-
-This puts a `tram-mcp` binary on your `PATH` (typically `~/.local/bin/tram-mcp`
-on macOS/Linux, `%APPDATA%\Python\Scripts\tram-mcp.exe` on Windows).
-
-`tram-mcp` then auto-updates itself: on launch (at most once per day) it
-spawns a detached `uv tool upgrade tram-mcp` in the background. The current
-process keeps running on the existing binary; the upgrade lands on the next
-launch. Set `TRAM_MCP_NO_AUTO_UPDATE=1` to disable, or run
-`uv tool upgrade tram-mcp` manually anytime.
-
-> **Why this and not `uvx tram-mcp`?** `uvx` re-resolves and re-extracts
-> wheels on every launch. On Windows this races with Defender / OneDrive
-> scanning the uv cache and intermittently fails with
-> `Access is denied. (os error -2147024891)` — the server starts, then
-> exits before it can respond. Even on a healthy machine, a cold uvx cache
-> costs ~4 s+ and can exceed an MCP client's startup timeout. Installing
-> once removes both problems.
-
-### Step 2 — Configure your MCP client
-
-#### Claude Desktop
-
-Add to your Claude Desktop config file:
-
-- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
-
-```json
-{
-  "mcpServers": {
-    "testrail": {
-      "command": "tram-mcp",
-      "env": {
-        "TESTRAIL_URL": "https://yourinstance.testrail.io",
-        "TESTRAIL_USERNAME": "your-email@example.com",
-        "TESTRAIL_API_KEY": "your-api-key"
-      }
-    }
-  }
-}
-```
-
-#### Claude Code
+Run these two commands (a coworker — or Claude Code itself — can follow them verbatim):
 
 ```bash
-claude mcp add testrail \
+claude mcp add tram-mcp -- npx -y tram-mcp
+npx tram-mcp login
+```
+
+1. The first command registers the server (Claude Code spawns `npx -y tram-mcp` over stdio).
+2. `npx tram-mcp login` opens a browser form — enter your TestRail **URL**, **username**,
+   and **API key** (My Settings → API Keys in TestRail). Credentials are validated against
+   TestRail and saved to `~/.tram-mcp/credentials.json` (readable only by you).
+
+Then start a Claude Code session and run `/mcp` — you should see **tram-mcp** with its tools.
+
+**Prefer to hand it to Claude Code as a prompt?** Paste this:
+
+> Add the TestRail MCP server: run `claude mcp add tram-mcp -- npx -y tram-mcp`, then run
+> `npx tram-mcp login` so I can enter my TestRail credentials in the browser.
+
+**Prefer environment variables** (CI, or to skip the browser form)? Set `TESTRAIL_URL`,
+`TESTRAIL_USERNAME`, and `TESTRAIL_API_KEY` (or `TESTRAIL_PASSWORD`) — they take precedence
+over the saved file. You can pass them inline when adding the server:
+
+```bash
+claude mcp add tram-mcp \
   -e TESTRAIL_URL=https://yourinstance.testrail.io \
-  -e TESTRAIL_USERNAME=your-email@example.com \
+  -e TESTRAIL_USERNAME=you@example.com \
   -e TESTRAIL_API_KEY=your-api-key \
-  -- tram-mcp
+  -- npx -y tram-mcp
 ```
 
-#### VS Code / VS Code Insiders
+Manage saved credentials anytime with `npx tram-mcp status` and `npx tram-mcp logout`.
 
-Create `.vscode/mcp.json` in your project (or add to your User Settings):
+## Add to Claude Desktop
 
-```json
-{
-  "servers": {
-    "testrail": {
-      "type": "stdio",
-      "command": "tram-mcp",
-      "env": {
-        "TESTRAIL_URL": "",
-        "TESTRAIL_USERNAME": "",
-        "TESTRAIL_API_KEY": ""
-      }
-    }
-  }
-}
-```
+1. Download **`tram-mcp.mcpb`** from the [latest release](https://github.com/trtmn/tram-mcp/releases/latest).
+2. Open it (or **Settings → Extensions → Install from file**) and confirm the install.
+3. Fill in your TestRail **URL**, **username**, and **API key** in the form. The API key is
+   stored in your OS keychain. Done — no terminal, no config editing.
 
-VS Code supports `${input:variableName}` placeholders to prompt for values at startup.
+## Other clients (Cursor, VS Code, …)
 
-#### Cursor
-
-Create `.cursor/mcp.json` in your project (or `~/.cursor/mcp.json` globally):
+Any MCP client that runs a stdio command works. Use `npx -y tram-mcp` as the command and
+supply credentials via the `TESTRAIL_*` env vars, e.g. `~/.cursor/mcp.json`:
 
 ```json
 {
   "mcpServers": {
-    "testrail": {
-      "command": "tram-mcp",
+    "tram-mcp": {
+      "command": "npx",
+      "args": ["-y", "tram-mcp"],
       "env": {
         "TESTRAIL_URL": "https://yourinstance.testrail.io",
-        "TESTRAIL_USERNAME": "your-email@example.com",
+        "TESTRAIL_USERNAME": "you@example.com",
         "TESTRAIL_API_KEY": "your-api-key"
       }
     }
   }
 }
 ```
-
-### Alternative — no-install via `uvx`
-
-If you prefer not to maintain a separate install, you can use `uvx tram-mcp`
-as the `command` (with `"args": ["tram-mcp"]`) — Cursor / VS Code / etc. style.
-This re-resolves on each launch, so a cold cache pays a noticeable ~4 s cost
-that can intermittently exceed MCP client startup timeouts. The launch-time
-auto-update (see above) also no-ops in this mode — `uvx` already pulls fresh
-on each invocation.
-
-> **Not recommended on Windows.** `uvx`'s per-launch wheel extraction races
-> Windows Defender real-time scanning and OneDrive sync over the uv cache,
-> producing intermittent `Failed to install: <wheel>. Caused by: Access is
-> denied. (os error -2147024891)` errors and "server failed to start"
-> behavior that retries fix. Use the `uv tool install` path above instead.
 
 ## Configuration
 
-The server requires TestRail credentials via environment variables:
+Credentials come from `npx tram-mcp login` (saved to `~/.tram-mcp/`), the Desktop install
+form, or these environment variables (which take precedence):
 
 | Variable | Required | Description |
 |---|---|---|
 | `TESTRAIL_URL` | Yes | Your TestRail instance URL (e.g. `https://example.testrail.io`) |
 | `TESTRAIL_USERNAME` | Yes | TestRail username or email |
-| `TESTRAIL_API_KEY` | Yes* | TestRail API key |
+| `TESTRAIL_API_KEY` | Yes* | TestRail API key (recommended) |
 | `TESTRAIL_PASSWORD` | Yes* | TestRail password (alternative to API key) |
 
-*Either `TESTRAIL_API_KEY` or `TESTRAIL_PASSWORD` must be set. API key is recommended.
+*Either `TESTRAIL_API_KEY` or `TESTRAIL_PASSWORD` must be set.
+
+## Remote deployment (Cloudflare Worker)
+
+The same core also runs as a remote OAuth-authenticated MCP server on Cloudflare Workers —
+useful for Claude.ai (web), which can't reach a local server. See
+[`cloudflare/README.md`](cloudflare/README.md) for deploy and self-host instructions.
 
 ## Development
 
-```bash
-# Install dependencies
-uv sync
-
-# Run the server locally
-uv run tram_mcp
-
-# Run tests
-uv run pytest
-
-# Run a single test
-uv run pytest path/to/test.py::test_name -v
-```
-
-### Releasing
-
-Merging a PR to `main` automatically tags the version and publishes to PyPI. **You must bump the version before merging:**
+All source lives in [`cloudflare/`](cloudflare/) (one shared core, two transports).
 
 ```bash
-uv version 0.6.0  # update version in pyproject.toml
+cd cloudflare
+npm install
+npm run check       # tsc --noEmit
+npm test            # vitest
+npm run build:cli   # bundle the local CLI -> dist/cli.js
 ```
 
-Also bump `manifest.json`'s `version` to match — both files must agree, and the `.mcpb` upload is rejected when the version isn't incremented. If you forget to bump, the PyPI publish is skipped (the existing version tag already exists on PyPI).
+## Releasing
+
+Automated by release-please. Merge a PR into `development` with a
+[Conventional Commit](https://www.conventionalcommits.org/) title; release-please opens a
+Release PR that bumps the version. Merging that Release PR tags the release, publishes to
+npm, and attaches the `tram-mcp.mcpb` to the GitHub Release. See `CLAUDE.md` for details.
 
 ## License
 

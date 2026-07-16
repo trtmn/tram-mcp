@@ -123,43 +123,31 @@ npm run catalog    # python3 scripts/generate_catalog.py [path-to-module-src]
 ## Run locally over stdio (no Cloudflare)
 
 The same shared core (tools, dispatch, catalog) also runs as a local **stdio**
-MCP server — the transport an MCP client spawns as a child process and talks to
-over stdin/stdout. This is the drop-in for a local/desktop setup.
+MCP server — the transport an MCP client spawns as a child process. This is the
+drop-in for a local/desktop setup, and the default way most people run it.
+
+For end users, this ships as the npm package `tram-mcp` (`bin` → `dist/cli.js`)
+and a Claude Desktop `.mcpb`. **See the root [README](../README.md) for the
+coworker-facing install** (`npx tram-mcp` + `npx tram-mcp login`, or the Desktop
+bundle). To build the CLI from this checkout:
 
 ```bash
 npm install
-npm run build:stdio    # esbuild → dist/stdio.js (the `tram-mcp` bin)
+npm run build:cli    # esbuild → dist/cli.js (the `tram-mcp` bin)
+node dist/cli.js login   # save creds via the browser form, or set TESTRAIL_* env
 ```
 
-**Authentication is by environment variables, not OAuth.** OAuth 2.1 is the
-*remote* model — it needs HTTP endpoints and a browser redirect, which a stdio
-process doesn't have. A local stdio server authenticates the standard way: the
-client passes `TESTRAIL_*` env vars when it launches the process. Both paths
-resolve through the same `getCredentials()` in `src/env.ts` — OAuth fills the
-grant `props` on the Worker; stdio leaves `props` undefined and falls back to
-the environment.
-
-Example Claude Desktop / Claude Code config:
-
-```json
-{
-  "mcpServers": {
-    "testrail": {
-      "command": "node",
-      "args": ["/abs/path/to/dist/stdio.js"],
-      "env": {
-        "TESTRAIL_URL": "https://yourinstance.testrail.io",
-        "TESTRAIL_USERNAME": "you@corp.com",
-        "TESTRAIL_API_KEY": "your-api-key"
-      }
-    }
-  }
-}
-```
+**Authentication is by the login wizard or environment variables, not OAuth.**
+OAuth 2.1 is the *remote* model — it needs HTTP endpoints and a browser redirect,
+which a stdio process doesn't have. Locally, `cli.ts` resolves credentials via
+`resolveLocalEnv()` (complete `TESTRAIL_*` env → the `~/.tram-mcp` credential
+store written by `tram-mcp login` → none), then hands them to the same
+`getCredentials()` in `src/env.ts` that the Worker uses (the Worker fills the
+grant `props`; stdio leaves `props` undefined and falls back to the environment).
 
 Either `TESTRAIL_API_KEY` (recommended) or `TESTRAIL_PASSWORD` must be set. If
 you want the OAuth flow on your own machine instead, use the HTTP transport via
-`npm run dev` (above) rather than the stdio bin.
+`npm run dev` (above) rather than the stdio CLI.
 
 ## Deploy / self-host
 
