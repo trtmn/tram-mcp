@@ -1,0 +1,32 @@
+name: CI
+
+# Runs on every push/PR to main and development. This is the project's sole test
+# suite, so it is intentionally NOT path-filtered — the release sync PR (which
+# only touches version files) must still get a CI run.
+on:
+  push:
+    branches: [main, development]
+  pull_request:
+    branches: [main, development]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Type-check & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - run: npm ci
+
+      - run: npx tsc --noEmit
+
+      - run: npx vitest run

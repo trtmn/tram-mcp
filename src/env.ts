@@ -1,11 +1,5 @@
-import type { OAuthHelpers } from "@cloudflare/workers-oauth-provider";
-
+/** The TestRail credential environment (from process.env or the credential store). */
 export interface Env {
-  MCP_OBJECT: DurableObjectNamespace;
-  /** KV namespace required by workers-oauth-provider for token/grant storage. */
-  OAUTH_KV: KVNamespace;
-  /** OAuth helper API injected by the OAuthProvider wrapper into handler env. */
-  OAUTH_PROVIDER: OAuthHelpers;
   TESTRAIL_URL?: string;
   TESTRAIL_USERNAME?: string;
   TESTRAIL_API_KEY?: string;
@@ -13,9 +7,9 @@ export interface Env {
 }
 
 /**
- * Per-connection TestRail credentials. Under the OAuth flow these are the grant
- * `props` (set by the /authorize handler and surfaced as `McpAgent.props`);
- * resolution falls back to the Worker env vars only when a grant supplies none.
+ * Client-supplied TestRail credentials, resolved in preference to the `Env`.
+ * The login wizard builds these from the submitted form to validate an entry
+ * against TestRail before saving it (see wizard.ts).
  */
 export interface ConnectionProps {
   testrailUrl?: string;
@@ -52,12 +46,11 @@ function clientSupplied(props?: ConnectionProps): boolean {
 }
 
 function resolveSource(env: Env, props?: ConnectionProps): ResolvedSource {
-  // All-or-nothing per source. If the client supplies ANY credential field,
-  // the entire connection is resolved from the client props with NO fallback
-  // to the Worker secrets — and vice versa. Mixing sources (e.g. a
-  // client-supplied URL paired with the Worker's own username + key) would
-  // transmit the Worker's credentials as Basic auth to a client-controlled
-  // host, leaking them. The two identities are therefore never combined.
+  // All-or-nothing per source. If the client supplies ANY credential field, the
+  // entire connection is resolved from those props with NO fallback to the
+  // environment — and vice versa. Mixing sources (e.g. a client-supplied URL
+  // paired with the environment's username + key) would send the environment's
+  // credentials as Basic auth to a client-controlled host, leaking them.
   if (clientSupplied(props)) {
     return {
       url: props!.testrailUrl,
@@ -84,15 +77,10 @@ export function checkConfig(env: Env, props?: ConnectionProps): string | null {
     missing.push("TESTRAIL_API_KEY or TESTRAIL_PASSWORD");
   }
   if (missing.length === 0) return null;
-  // The guidance differs by transport: the Worker (OAUTH_PROVIDER bound) points
-  // at the OAuth login form; a local stdio run points at `tram-mcp login`.
-  const hint = env.OAUTH_PROVIDER
-    ? "Reconnect the MCP server and complete the TestRail login form during the " +
-      "OAuth authorization step to provide your instance URL, username, and API " +
-      "key or password."
-    : "Run `tram-mcp login` to enter your TestRail URL, username, and API key — " +
-      "or set TESTRAIL_URL, TESTRAIL_USERNAME, and TESTRAIL_API_KEY (or " +
-      "TESTRAIL_PASSWORD) in the environment.";
+  const hint =
+    "Run `tram-mcp login` to enter your TestRail URL, username, and API key — " +
+    "or set TESTRAIL_URL, TESTRAIL_USERNAME, and TESTRAIL_API_KEY (or " +
+    "TESTRAIL_PASSWORD) in the environment.";
   return `Missing TestRail configuration: ${missing.join(", ")}. ${hint}`;
 }
 
@@ -114,10 +102,6 @@ export function configView(env: Env, props?: ConnectionProps): Record<string, un
     url: src.url ?? null,
     username: src.username ?? null,
     auth_method: src.apiKey ? "api_key" : src.password ? "password" : "none",
-    credential_source: clientSupplied(props)
-      ? "per-client"
-      : env.OAUTH_PROVIDER
-        ? "worker secrets"
-        : "local (env or ~/.tram-mcp)",
+    credential_source: clientSupplied(props) ? "per-client" : "local (env or ~/.tram-mcp)",
   };
 }
