@@ -41,14 +41,17 @@ describe("runWizard", () => {
     const { wizard, credstore } = await fresh();
 
     await wizard.runWizard({
-      // The injected opener plays the role of the browser: GET the form, POST creds.
+      // The injected opener plays the role of the browser: GET the form (to
+      // read the CSRF token), then POST the credentials with that token.
       open: (url) => {
         void (async () => {
-          await fetch(url);
+          const html = await (await fetch(url)).text();
+          const token = html.match(/name="wizard_token" value="([^"]+)"/)?.[1] ?? "";
           await fetch(`${url}submit`, {
             method: "POST",
             headers: { "content-type": "application/x-www-form-urlencoded" },
             body: new URLSearchParams({
+              wizard_token: token,
               instance_url: "https://c.testrail.io",
               username: "u@c.com",
               auth_method: "api_key",
@@ -80,10 +83,13 @@ describe("startWizardServer failure handling", () => {
     const saved: unknown[] = [];
     const { url, close } = await wizard.startWizardServer({ save: (c) => saved.push(c) });
     try {
+      const token =
+        (await (await fetch(url)).text()).match(/name="wizard_token" value="([^"]+)"/)?.[1] ?? "";
       const res = await fetch(`${url}submit`, {
         method: "POST",
         headers: { "content-type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({
+          wizard_token: token,
           instance_url: "https://c.testrail.io",
           username: "u@c.com",
           auth_method: "api_key",

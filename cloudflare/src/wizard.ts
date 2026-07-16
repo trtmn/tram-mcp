@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { createServer, type IncomingMessage } from "node:http";
 
 import { escapeHtml } from "./authorize";
@@ -34,14 +35,20 @@ const htmlHead = `<!doctype html><html lang="en"><head><meta charset="utf-8">
 </style></head><body>`;
 
 export function loginFormPage(
-  opts: { error?: string; values?: Record<string, string> } = {},
+  opts: { error?: string; values?: Record<string, string>; token?: string } = {},
 ): string {
   const v = opts.values ?? {};
   const err = opts.error ? `<p class="err" role="alert">${escapeHtml(opts.error)}</p>` : "";
   const sel = (m: string) => (v.auth_method === m ? " selected" : "");
+  // CSRF defense: the submit must echo this per-session token, which a
+  // cross-origin attacker cannot read from the GET response (blocked by CORS).
+  const tokenField = opts.token
+    ? `<input type="hidden" name="wizard_token" value="${escapeHtml(opts.token)}">`
+    : "";
   return `${htmlHead}<form class="card" method="POST" action="/submit">
   <h1>Connect to TestRail</h1>
   <p class="sub">Enter your TestRail details. They are stored only on this machine (~/.tram-mcp) and used to call TestRail directly.</p>
+  ${tokenField}
   ${err}
   <label for="instance_url">TestRail URL</label>
   <input id="instance_url" name="instance_url" type="url" required placeholder="https://yourcompany.testrail.io" value="${escapeHtml(v.instance_url ?? "")}">
@@ -81,13 +88,14 @@ export async function handleSubmit(fields: Record<string, string>): Promise<Subm
   const authMethod: "api_key" | "password" =
     fields.auth_method === "password" ? "password" : "api_key";
   const secret = fields.secret ?? "";
+  const token = fields.wizard_token;
   const values = { instance_url: instanceUrl, username, auth_method: authMethod };
 
   if (!instanceUrl || !username || !secret) {
     return {
       ok: false,
       status: 400,
-      page: loginFormPage({ error: "All fields are required.", values }),
+      page: loginFormPage({ error: "All fields are required.", values, token }),
     };
   }
 
@@ -110,7 +118,11 @@ export async function handleSubmit(fields: Record<string, string>): Promise<Subm
         : status === 403
           ? "TestRail accepted the login but API access is denied (HTTP 403). Enable API access or check the account isn't locked."
           : `Couldn't reach TestRail with those details${status ? ` (HTTP ${status})` : ""}. Check the URL.`;
-    return { ok: false, status: status ?? 400, page: loginFormPage({ error: detail, values }) };
+    return {
+      ok: false,
+      status: status ?? 400,
+      page: loginFormPage({ error: detail, values, token }),
+    };
   }
 
   const creds: StoredCreds = {
@@ -154,6 +166,11 @@ export async function startWizardServer(
   opts: { save?: (c: StoredCreds) => void } = {},
 ): Promise<{ url: string; done: Promise<void>; close(): void }> {
   const save = opts.save ?? saveCredentials;
+  // Per-session CSRF token embedded in the form and required on submit, plus a
+  // Host allowlist (set after bind) so a cross-origin / DNS-rebinding page
+  // cannot drive this server. Both are populated before the URL is handed out.
+  const token = randomBytes(32).toString("hex");
+  let allowedHosts: string[] = [];
   let resolveDone!: () => void;
   let rejectDone!: (e: Error) => void;
   const done = new Promise<void>((res, rej) => {
@@ -163,16 +180,32 @@ export async function startWizardServer(
 
   const server = createServer((req, res) => {
     void (async () => {
+      // Reject anything not addressed to our own loopback host:port. An
+      // attacker page that rebinds its domain to 127.0.0.1 still sends its own
+      // hostname in the Host header, so this defeats DNS rebinding.
+      if (!allowedHosts.includes(req.headers.host ?? "")) {
+        res.writeHead(403, { "content-type": "text/plain" });
+        res.end("Forbidden");
+        return;
+      }
       const path = (req.url ?? "/").split("?")[0];
       if (req.method === "GET" && path === "/") {
         res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
-        res.end(loginFormPage());
+        res.end(loginFormPage({ token }));
         return;
       }
       if (req.method === "POST" && path === "/submit") {
         const fields = Object.fromEntries(
           new URLSearchParams(await readBody(req)),
         ) as Record<string, string>;
+        // CSRF gate: reject before any credential is saved. A cross-origin
+        // attacker cannot read the token from the GET response (CORS), so
+        // cannot forge a valid submit.
+        if (fields.wizard_token !== token) {
+          res.writeHead(403, { "content-type": "text/plain" });
+          res.end("Invalid or missing session token. Reload the login page.");
+          return;
+        }
         const result = await handleSubmit(fields);
         if (result.ok) {
           save(result.creds);
@@ -199,6 +232,7 @@ export async function startWizardServer(
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const addr = server.address();
   if (!addr || typeof addr === "string") throw new Error("Could not bind wizard server");
+  allowedHosts = [`127.0.0.1:${addr.port}`, `localhost:${addr.port}`];
   const url = `http://127.0.0.1:${addr.port}/`;
   return { url, done, close: () => server.close() };
 }

@@ -23,6 +23,13 @@ describe("loginFormPage", () => {
     expect(html).toContain("Bad creds");
     expect(html).toContain("u@c.com");
   });
+
+  it("embeds the CSRF token as a hidden field when provided", () => {
+    expect(loginFormPage({ token: "tok123" })).toContain(
+      'name="wizard_token" value="tok123"',
+    );
+    expect(loginFormPage()).not.toContain("wizard_token");
+  });
 });
 
 describe("handleSubmit", () => {
@@ -45,8 +52,9 @@ describe("handleSubmit", () => {
     }
   });
 
-  it("rejects missing fields with a 400 form page", async () => {
+  it("rejects missing fields with a 400 form page and preserves the token", async () => {
     const res = await handleSubmit({
+      wizard_token: "tok123",
       instance_url: "",
       username: "",
       auth_method: "api_key",
@@ -56,6 +64,7 @@ describe("handleSubmit", () => {
     if (!res.ok) {
       expect(res.status).toBe(400);
       expect(res.page).toContain("All fields are required");
+      expect(res.page).toContain('name="wizard_token" value="tok123"');
     }
   });
 
