@@ -1,5 +1,8 @@
+import { spawn } from "node:child_process";
+import { createServer, type IncomingMessage } from "node:http";
+
 import { escapeHtml } from "./authorize";
-import type { StoredCreds } from "./credstore";
+import { saveCredentials, type StoredCreds } from "./credstore";
 import type { ConnectionProps, Env } from "./env";
 import { getCredentials } from "./env";
 import { TestRailClient, TestRailError } from "./testrail";
@@ -117,4 +120,111 @@ export async function handleSubmit(fields: Record<string, string>): Promise<Subm
     secret,
   };
   return { ok: true, creds };
+}
+
+/** Best-effort open the platform browser; never throws. */
+export function openBrowser(url: string): void {
+  try {
+    const child =
+      process.platform === "win32"
+        ? spawn("cmd", ["/c", "start", "", url], { stdio: "ignore", detached: true })
+        : spawn(process.platform === "darwin" ? "open" : "xdg-open", [url], {
+            stdio: "ignore",
+            detached: true,
+          });
+    child.on("error", () => {});
+    child.unref();
+  } catch {
+    /* fall back to the printed URL */
+  }
+}
+
+async function readBody(req: IncomingMessage): Promise<string> {
+  const chunks: Buffer[] = [];
+  for await (const c of req) chunks.push(c as Buffer);
+  return Buffer.concat(chunks).toString("utf8");
+}
+
+/**
+ * Start a transient loopback server that serves the credential form and, on a
+ * valid submission, persists the credentials and resolves `done`. The server
+ * binds to an OS-assigned port on 127.0.0.1 only. Callers must `close()` it.
+ */
+export async function startWizardServer(
+  opts: { save?: (c: StoredCreds) => void } = {},
+): Promise<{ url: string; done: Promise<void>; close(): void }> {
+  const save = opts.save ?? saveCredentials;
+  let resolveDone!: () => void;
+  let rejectDone!: (e: Error) => void;
+  const done = new Promise<void>((res, rej) => {
+    resolveDone = res;
+    rejectDone = rej;
+  });
+
+  const server = createServer((req, res) => {
+    void (async () => {
+      const path = (req.url ?? "/").split("?")[0];
+      if (req.method === "GET" && path === "/") {
+        res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+        res.end(loginFormPage());
+        return;
+      }
+      if (req.method === "POST" && path === "/submit") {
+        const fields = Object.fromEntries(
+          new URLSearchParams(await readBody(req)),
+        ) as Record<string, string>;
+        const result = await handleSubmit(fields);
+        if (result.ok) {
+          save(result.creds);
+          res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+          res.end(successPage());
+          resolveDone();
+          return;
+        }
+        res.writeHead(result.status, { "content-type": "text/html; charset=utf-8" });
+        res.end(result.page);
+        return;
+      }
+      res.writeHead(404, { "content-type": "text/plain" });
+      res.end("Not found");
+    })().catch((err) => {
+      if (!res.headersSent) {
+        res.writeHead(500, { "content-type": "text/plain" });
+        res.end("Internal error");
+      }
+      rejectDone(err instanceof Error ? err : new Error(String(err)));
+    });
+  });
+
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const addr = server.address();
+  if (!addr || typeof addr === "string") throw new Error("Could not bind wizard server");
+  const url = `http://127.0.0.1:${addr.port}/`;
+  return { url, done, close: () => server.close() };
+}
+
+/**
+ * Run the interactive login: open the browser to the credential form and wait
+ * (up to `timeoutMs`) for a successful submission, then shut the server down.
+ */
+export async function runWizard(
+  opts: { timeoutMs?: number; open?: (url: string) => void } = {},
+): Promise<void> {
+  const open = opts.open ?? openBrowser;
+  const timeoutMs = opts.timeoutMs ?? 5 * 60_000;
+  const { url, done, close } = await startWizardServer();
+  console.error(`Opening ${url} in your browser to connect TestRail…`);
+  console.error("If it doesn't open, paste that URL into your browser.");
+  open(url);
+  let timer: NodeJS.Timeout | undefined;
+  const timeout = new Promise<never>((_, rej) => {
+    timer = setTimeout(() => rej(new Error("Login timed out after 5 minutes.")), timeoutMs);
+  });
+  try {
+    await Promise.race([done, timeout]);
+    console.error("TestRail credentials saved. You're all set.");
+  } finally {
+    if (timer) clearTimeout(timer);
+    close();
+  }
 }
