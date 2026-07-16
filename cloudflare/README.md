@@ -10,6 +10,50 @@ Instead of importing `testrail_api_module`, the Worker dispatches from a static
 catalog (`src/catalog.json`) generated from that module's source — same
 categories, methods, parameters, and docs as the Python server.
 
+The same shared core also runs **locally over stdio** for Claude Code and Claude
+Desktop — no Cloudflare account, no HTTPS, no OAuth (see below).
+
+## Run locally (stdio + browser login)
+
+Run the server on your own machine and enter your TestRail credentials through a
+browser form — nothing sensitive goes into your client config.
+
+### 1. Save your TestRail credentials (once)
+
+```bash
+npx tram-mcp login
+```
+
+A browser tab opens. Enter your TestRail URL, username, and an **API key**
+(My Settings → API Keys in TestRail). The details are validated against TestRail
+and saved to `~/.tram-mcp/credentials.json`, readable only by you. Re-run any
+time to update them; `npx tram-mcp logout` removes them.
+
+### 2. Connect your client
+
+**Claude Code**
+
+```bash
+claude mcp add tram-mcp -- npx -y tram-mcp
+```
+
+**Claude Desktop** — install the `.mcpb` bundle from the latest release, then run
+`npx tram-mcp login` once (step 1 above).
+
+### 3. Verify
+
+```bash
+npx tram-mcp status
+```
+
+Prints the active URL / username / auth method — never the secret. Power users
+can skip the wizard by setting `TESTRAIL_URL`, `TESTRAIL_USERNAME`, and
+`TESTRAIL_API_KEY` (or `TESTRAIL_PASSWORD`) in the environment; those take
+precedence over the saved file.
+
+Requires Node ≥ 22 for the `npx` path. (Claude Desktop's `.mcpb` bundles its own
+Node runtime.)
+
 ## Tools (9)
 
 Ported from the Python server:
