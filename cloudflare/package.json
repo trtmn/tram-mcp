@@ -10,10 +10,11 @@
     "check": "tsc --noEmit",
     "test": "vitest run",
     "catalog": "python3 scripts/generate_catalog.py",
-    "build:stdio": "esbuild src/stdio.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/stdio.js --banner:js='#!/usr/bin/env node'"
+    "build:stdio": "esbuild src/stdio.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/stdio.js --banner:js='#!/usr/bin/env node'",
+    "build:cli": "esbuild src/cli.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/cli.js --banner:js='#!/usr/bin/env node'"
   },
   "bin": {
-    "tram-mcp": "dist/stdio.js"
+    "tram-mcp": "dist/cli.js"
   },
   "dependencies": {
     "@cloudflare/workers-oauth-provider": "^0.7.2",

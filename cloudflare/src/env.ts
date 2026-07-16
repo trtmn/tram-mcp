@@ -114,6 +114,10 @@ export function configView(env: Env, props?: ConnectionProps): Record<string, un
     url: src.url ?? null,
     username: src.username ?? null,
     auth_method: src.apiKey ? "api_key" : src.password ? "password" : "none",
-    credential_source: clientSupplied(props) ? "per-client" : "worker secrets",
+    credential_source: clientSupplied(props)
+      ? "per-client"
+      : env.OAUTH_PROVIDER
+        ? "worker secrets"
+        : "local (env or ~/.tram-mcp)",
   };
 }
