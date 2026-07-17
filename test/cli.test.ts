@@ -1,7 +1,10 @@
 import { mkdtempSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { isEntrypoint } from "../src/cli";
 
 let tmpHome: string;
 beforeEach(() => {
@@ -15,6 +18,36 @@ async function fresh() {
   vi.resetModules();
   return import("../src/cli");
 }
+
+describe("isEntrypoint", () => {
+  const meta = "file:///abs/pkg/dist/cli.js";
+  const real = fileURLToPath(meta); // /abs/pkg/dist/cli.js
+
+  it("true when run directly (argv1 is the real path)", () => {
+    expect(isEntrypoint(real, meta, (p) => p)).toBe(true);
+  });
+
+  it("true when run via a bin symlink (regression: npx tram-mcp)", () => {
+    // node_modules/.bin/tram-mcp is a symlink resolving to the real dist/cli.js
+    expect(isEntrypoint("/proj/node_modules/.bin/tram-mcp", meta, () => real)).toBe(true);
+  });
+
+  it("false when argv1 resolves elsewhere (imported, not the entry)", () => {
+    expect(isEntrypoint("/proj/other.js", meta, (p) => p)).toBe(false);
+  });
+
+  it("false when argv1 is missing", () => {
+    expect(isEntrypoint(undefined, meta)).toBe(false);
+  });
+
+  it("false (no throw) when the path can't be resolved", () => {
+    expect(
+      isEntrypoint("/missing", meta, () => {
+        throw new Error("ENOENT");
+      }),
+    ).toBe(false);
+  });
+});
 
 describe("dispatch", () => {
   it("returns 'server' for no subcommand", async () => {
