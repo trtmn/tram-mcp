@@ -1,0 +1,53 @@
+{
+  "name": "tram-mcp",
+  "version": "0.7.0",
+  "description": "TestRail MCP server — browse the API, search test cases, and manage runs and results. Runs locally over stdio.",
+  "license": "MIT",
+  "author": "Matt Troutman",
+  "homepage": "https://github.com/trtmn/tram-mcp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trtmn/tram-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/trtmn/tram-mcp/issues"
+  },
+  "keywords": [
+    "testrail",
+    "testing",
+    "qa",
+    "test-management",
+    "mcp",
+    "model-context-protocol"
+  ],
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "tram-mcp": "dist/cli.js"
+  },
+  "files": [
+    "dist/cli.js"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "catalog": "python3 scripts/generate_catalog.py",
+    "build:cli": "esbuild src/cli.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/cli.js --banner:js='#!/usr/bin/env node'",
+    "prepublishOnly": "npm run build:cli"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.1.0"
+  }
+}

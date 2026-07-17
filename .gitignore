@@ -1,21 +1,17 @@
-# Python-generated files
-__pycache__/
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
-
-# Virtual environments
-.venv
+# macOS
+.DS_Store
 
 # Secrets / env
 .env
 .env.*
 
-# Local config
+# Local MCP client config (coworker install is documented in the README, not committed)
 .mcp.json
 .claude/settings.local.json
 
-# Built artifacts (.mcpb is built by CI on release; do not commit)
-testrail_mcp.mcpb
+# Built artifacts (.mcpb bundles are built by CI on release; do not commit)
+*.mcpb
+
+# Node / TypeScript
+node_modules/
+dist/

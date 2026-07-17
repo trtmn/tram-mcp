@@ -1,0 +1,3441 @@
+{
+  "attachments": {
+    "description": "API for managing attachments in TestRail. See [AttachmentsAPI](testrail_api_module/attachments.html) for details.",
+    "methods": {
+      "add_attachment_to_case": {
+        "doc": "Add an attachment to a test case.\n\nArgs:\n    case_id: The ID of the test case.\n    file_path: The path to the file to attach.\n\nReturns:\n    Dict containing the created attachment ID, e.g.\n    ``{\"attachment_id\": 443}``.\n\nRaises:\n    FileNotFoundError: If the file does not exist.\n    TestRailAPIError: If the API request fails.",
+        "params": [
+          {
+            "name": "case_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "file_path",
+            "required": true,
+            "type": "str"
+          }
+        ],
+        "unsupported": "Composite helper with no direct API call; use the underlying endpoints instead."
+      },
+      "add_attachment_to_plan": {
+        "doc": "Add an attachment to a test plan.\n\nArgs:\n    plan_id: The ID of the test plan.\n    file_path: The path to the file to attach.\n\nReturns:\n    Dict containing the created attachment ID, e.g.\n    ``{\"attachment_id\": 443}``.\n\nRaises:\n    FileNotFoundError: If the file does not exist.\n    TestRailAPIError: If the API request fails.",
+        "params": [
+          {
+            "name": "plan_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "file_path",
+            "required": true,
+            "type": "str"
+          }
+        ],
+        "unsupported": "Composite helper with no direct API call; use the underlying endpoints instead."
+      },
+      "add_attachment_to_plan_entry": {
+        "doc": "Add an attachment to a test plan entry.\n\nArgs:\n    plan_id: The ID of the test plan containing the entry.\n    entry_id: The ID of the test plan entry.\n    file_path: The path to the file to attach.\n\nReturns:\n    Dict containing the created attachment ID, e.g.\n    ``{\"attachment_id\": 443}``.\n\nRaises:\n    FileNotFoundError: If the file does not exist.\n    TestRailAPIError: If the API request fails.",
+        "params": [
+          {
+            "name": "plan_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "entry_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "file_path",
+            "required": true,
+            "type": "str"
+          }
+        ],
+        "unsupported": "Composite helper with no direct API call; use the underlying endpoints instead."
+      },
+      "add_attachment_to_result": {
+        "doc": "Add an attachment to a test result.\n\nArgs:\n    result_id: The ID of the test result.\n    file_path: The path to the file to attach.\n\nReturns:\n    Dict containing the created attachment ID, e.g.\n    ``{\"attachment_id\": 443}``.\n\nRaises:\n    FileNotFoundError: If the file does not exist.\n    TestRailAPIError: If the API request fails.",
+        "params": [
+          {
+            "name": "result_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "file_path",
+            "required": true,
+            "type": "str"
+          }
+        ],
+        "unsupported": "Composite helper with no direct API call; use the underlying endpoints instead."
+      },
+      "add_attachment_to_run": {
+        "doc": "Add an attachment to a test run.\n\nArgs:\n    run_id: The ID of the test run.\n    file_path: The path to the file to attach.\n\nReturns:\n    Dict containing the created attachment ID, e.g.\n    ``{\"attachment_id\": 443}``.\n\nRaises:\n    FileNotFoundError: If the file does not exist.\n    TestRailAPIError: If the API request fails.",
+        "params": [
+          {
+            "name": "run_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "file_path",
+            "required": true,
+            "type": "str"
+          }
+        ],
+        "unsupported": "Composite helper with no direct API call; use the underlying endpoints instead."
+      },
+      "delete_attachment": {
+        "doc": "Delete an attachment.\n\nArgs:\n    attachment_id: The ID of the attachment to delete.\n        Newer TestRail versions use UUID strings, older ones\n        use integers.\n\nReturns:\n    Empty dict on success (TestRail returns an empty body).\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "delete_attachment/{attachment_id}",
+          "pathParams": [
+            "attachment_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "attachment_id",
+            "required": true,
+            "type": "int | str"
+          }
+        ]
+      },
+      "get_attachment": {
+        "doc": "Download an attachment by ID.\n\nArgs:\n    attachment_id: The ID of the attachment to retrieve.\n        Newer TestRail versions use UUID strings, older ones\n        use integers.\n\nReturns:\n    The raw file content as bytes.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_attachment/{attachment_id}",
+          "pathParams": [
+            "attachment_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "attachment_id",
+            "required": true,
+            "type": "int | str"
+          }
+        ]
+      },
+      "get_attachments_for_case": {
+        "doc": "Get all attachments for a test case.\n\nArgs:\n    case_id: The ID of the test case.\n    limit: The number of attachments to return (max 250).\n    offset: The offset to start returning attachments from.\n\nReturns:\n    Attachment data (paginated dict on TestRail 6.7+, plain\n    list on older versions).\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_attachments_for_case/{case_id}",
+          "pathParams": [
+            "case_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "case_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "limit",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "offset",
+            "required": false,
+            "type": "int | None"
+          }
+        ]
+      },
+      "get_attachments_for_plan": {
+        "doc": "Get all attachments for a test plan.\n\nArgs:\n    plan_id: The ID of the test plan.\n    limit: The number of attachments to return (max 250).\n    offset: The offset to start returning attachments from.\n\nReturns:\n    Attachment data (paginated dict on TestRail 6.7+, plain\n    list on older versions).\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_attachments_for_plan/{plan_id}",
+          "pathParams": [
+            "plan_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "plan_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "limit",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "offset",
+            "required": false,
+            "type": "int | None"
+          }
+        ]
+      },
+      "get_attachments_for_plan_entry": {
+        "doc": "Get all attachments for a test plan entry.\n\nArgs:\n    plan_id: The ID of the test plan containing the entry.\n    entry_id: The ID of the test plan entry.\n\nReturns:\n    Attachment data (paginated dict on TestRail 6.7+, plain\n    list on older versions).\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_attachments_for_plan_entry/{plan_id}/{entry_id}",
+          "pathParams": [
+            "plan_id",
+            "entry_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "plan_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "entry_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_attachments_for_run": {
+        "doc": "Get all attachments for a test run.\n\nArgs:\n    run_id: The ID of the test run.\n    limit: The number of attachments to return (max 250).\n    offset: The offset to start returning attachments from.\n\nReturns:\n    Attachment data (paginated dict on TestRail 6.7+, plain\n    list on older versions).\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_attachments_for_run/{run_id}",
+          "pathParams": [
+            "run_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "run_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "limit",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "offset",
+            "required": false,
+            "type": "int | None"
+          }
+        ]
+      },
+      "get_attachments_for_test": {
+        "doc": "Get all attachments for a test.\n\nArgs:\n    test_id: The ID of the test.\n\nReturns:\n    Attachment data (paginated dict on TestRail 6.7+, plain\n    list on older versions).\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_attachments_for_test/{test_id}",
+          "pathParams": [
+            "test_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "test_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      }
+    }
+  },
+  "bdd": {
+    "description": "API for managing BDD features in TestRail. See [BDDAPI](testrail_api_module/bdd.html) for details.",
+    "methods": {
+      "add_bdd": {
+        "doc": "Import/upload a BDD scenario from a .feature file into a\nsection.\n\nThe file is uploaded as ``multipart/form-data`` with the file\nbytes in an ``attachment`` form field, matching the official\nTestRail API contract.\n\nArgs:\n    section_id: The ID of the section to import the BDD\n        scenario into.\n    feature_file: The path to the .feature file to import.\n\nReturns:\n    Dict containing the created test case data.\n\nRaises:\n    FileNotFoundError: If the specified feature file does\n        not exist.\n    TestRailAPIError: If the API request fails.",
+        "params": [
+          {
+            "name": "section_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "feature_file",
+            "required": true,
+            "type": "str"
+          }
+        ],
+        "unsupported": "Composite helper with no direct API call; use the underlying endpoints instead."
+      },
+      "get_bdd": {
+        "doc": "Export a BDD scenario from a test case as a .feature file.\n\nArgs:\n    case_id: The ID of the test case to export.\n\nReturns:\n    The raw .feature file content as bytes (Gherkin syntax).\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_bdd/{case_id}",
+          "pathParams": [
+            "case_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "case_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      }
+    }
+  },
+  "cases": {
+    "description": "API for managing test cases in TestRail. See [CasesAPI](testrail_api_module/cases.html) for details.",
+    "methods": {
+      "add_case": {
+        "doc": "Add a new test case.\n\nArgs:\n    section_id: The ID of the section to add the test case to.\n    title: The title of the test case.\n    template_id: Optional ID of the template to use.\n    type_id: Optional type of test case:\n        1: Other, 2: Functional, 3: Performance, 4: Usability, 5: Security, 6: Compliance\n    priority_id: Optional priority of the test case:\n        1: Critical, 2: High, 3: Medium, 4: Low\n    estimate: Optional estimated time to complete the test.\n    milestone_id: Optional ID of the milestone to add the test case to.\n    refs: Optional references or requirements.\n    description: Optional description of the test case.\n    preconditions: Optional preconditions for the test case.\n    postconditions: Optional postconditions for the test case.\n    custom_fields: Optional custom field values. Should use system names\n        (e.g., 'custom_field_name') as keys, not display names.\n\n        Common custom field types and formats:\n        - Text fields: String values (e.g., custom_automation_type: \"Automated\")\n        - Dropdown/Multi-select: Arrays of numeric IDs (e.g., custom_module: [3, 5])\n        - Checkboxes: Boolean values (e.g., custom_case_test_data_required: True)\n        - Separated steps: Array of objects with content/expected keys:\n            custom_steps_separated: [\n                {\"content\": \"Step 1\", \"expected\": \"Result 1\"},\n                {\"content\": \"Step 2\", \"expected\": \"Result 2\"}\n            ]\n\n    validate_required: If True, validate that all required fields\n        are provided before sending the request. Default is False (validation disabled).\n        Set to True to enable validation and catch missing fields before API call.\n        When False, TestRail API will handle validation and return errors.\n    validate_only: If True, only validate the fields without creating the case.\n        Returns validation results instead of making the API call.\n        Useful for checking requirements before submission.\n\nReturns:\n    Dict containing the created test case data, or validation results if validate_only=True.\n\n    When validate_only=True, returns:\n    {\n        \"valid\": bool,  # True if all required fields are present\n        \"missing_fields\": [...],  # List of missing required fields with type hints\n        \"provided_fields\": [...],  # List of fields that were provided\n        \"message\": str  # Human-readable validation summary\n    }\n\nRaises:\n    TestRailAPIError: If the API request fails.\n    ValueError: If required fields are missing and validate_required is True.\n\nNote:\n    Required fields vary by project configuration. Use get_case_fields() to see\n    which fields are required and their expected data types for your project.\n\nExample:\n    >>> # Basic case with standard fields\n    >>> case = api.cases.add_case(\n    ...     section_id=1,\n    ...     title=\"Login Test\",\n    ...     type_id=2,\n    ...     priority_id=2,\n    ...     description=\"Test user login functionality\"\n    ... )\n\n    >>> # Case with custom fields\n    >>> case = api.cases.add_case(\n    ...     section_id=1,\n    ...     title=\"Automated Login Test\",\n    ...     custom_fields={\n    ...         'custom_automation_type': 1,\n    ...         'custom_steps_separated': [\n    ...             {'content': 'Navigate to login page', 'expected': 'Login form visible'},\n    ...             {'content': 'Enter credentials', 'expected': 'Login successful'}\n    ...         ],\n    ...         'custom_case_test_data_required': True,\n    ...         'custom_interface_type': [3],  # Array of IDs as ints\n    ...         'custom_module': [5, 7]  # Array of IDs as ints\n    ...     }\n    ... )\n\n    >>> # Validate fields without creating the case\n    >>> validation = api.cases.add_case(\n    ...     section_id=1,\n    ...     title=\"Test Case\",\n    ...     validate_only=True\n    ... )\n    >>> if not validation['valid']:\n    ...     print(validation['message'])\n    ...     print(\"Missing:\", validation['missing_fields'])",
+        "http": {
+          "endpoint": "add_case/{section_id}",
+          "pathParams": [
+            "section_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "section_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "title",
+            "required": true,
+            "type": "str"
+          },
+          {
+            "default": "None",
+            "name": "template_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "type_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "priority_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "estimate",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "milestone_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "refs",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "description",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "preconditions",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "postconditions",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "custom_fields",
+            "required": false,
+            "type": "dict[str, Any] | None"
+          },
+          {
+            "default": "False",
+            "name": "validate_required",
+            "required": false,
+            "type": "bool"
+          },
+          {
+            "default": "False",
+            "name": "validate_only",
+            "required": false,
+            "type": "bool"
+          }
+        ]
+      },
+      "add_case_field": {
+        "doc": "Add a new test case custom field.\n\nArgs:\n    **kwargs: Field definition parameters including:\n        - type: The type of the field (e.g., 'String',\n            'Integer', 'Dropdown', etc.)\n        - name: The display name of the field.\n        - label: The system name/label for the field.\n        - description: Optional description.\n        - include_all: Whether to include in all templates.\n        - template_ids: List of template IDs if not\n            include_all.\n        - configs: Optional configuration array.\n\nReturns:\n    Dict containing the created field data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "add_case_field",
+          "pathParams": [],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "kwargs",
+            "required": false,
+            "type": "**kwargs"
+          }
+        ]
+      },
+      "clear_case_fields_cache": {
+        "doc": "Clear the cached case field requirements.\n\nUse this if your project configuration changes and you need to\nrefresh the field requirements.",
+        "params": [],
+        "unsupported": "Composite helper with no direct API call; use the underlying endpoints instead."
+      },
+      "copy_cases_to_section": {
+        "doc": "Copy test cases to a different section.\n\nArgs:\n    section_id: The ID of the target section.\n    case_ids: List of test case IDs to copy.\n\nReturns:\n    List of dictionaries containing the copied test case data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> copied_cases = api.cases.copy_cases_to_section(5, [1, 2, 3])",
+        "http": {
+          "endpoint": "copy_cases_to_section/{section_id}",
+          "pathParams": [
+            "section_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "section_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "case_ids",
+            "required": true,
+            "type": "list[int]"
+          }
+        ]
+      },
+      "delete_case": {
+        "doc": "Delete a test case.\n\nArgs:\n    case_id: The ID of the test case to delete.\n    soft: Optional soft-delete flag. Set to 1 to soft-delete\n        the case (moves to trash) instead of permanently deleting.\n\nReturns:\n    Dict containing the response data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> result = api.cases.delete_case(123)\n    >>> result = api.cases.delete_case(123, soft=1)",
+        "http": {
+          "endpoint": "delete_case/{case_id}",
+          "pathParams": [
+            "case_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "case_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "soft",
+            "required": false,
+            "type": "int | None"
+          }
+        ]
+      },
+      "delete_cases": {
+        "doc": "Delete multiple test cases at once (bulk delete).\n\nArgs:\n    project_id: The ID of the project containing the cases.\n    suite_id: The ID of the suite containing the cases.\n    cases: List of case IDs to delete.\n    soft: Optional soft-delete flag. Set to 1 to soft-delete\n        the cases (moves to trash) instead of permanently deleting.\n\nReturns:\n    Dict containing the response data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "delete_cases/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "suite_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "cases",
+            "required": true,
+            "type": "list[int]"
+          },
+          {
+            "default": "None",
+            "name": "soft",
+            "required": false,
+            "type": "int | None"
+          }
+        ]
+      },
+      "get_case": {
+        "doc": "Get a test case by ID.\n\nArgs:\n    case_id: The ID of the test case to retrieve.\n\nReturns:\n    Dict containing the test case data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> case = api.cases.get_case(123)\n    >>> print(case['title'])",
+        "http": {
+          "endpoint": "get_case/{case_id}",
+          "pathParams": [
+            "case_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "case_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_case_fields": {
+        "doc": "Get all available test case fields.\n\nReturns:\n    List of dictionaries containing test case field data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> fields = api.cases.get_case_fields()\n    >>> for field in fields:\n    ...     print(f\"Field: {field['name']}, Type: {field['type']}\")",
+        "http": {
+          "endpoint": "get_case_fields",
+          "pathParams": [],
+          "verb": "GET"
+        },
+        "params": []
+      },
+      "get_case_types": {
+        "doc": "Get all available test case types.\n\nReturns:\n    List of dictionaries containing test case type data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> types = api.cases.get_case_types()\n    >>> for case_type in types:\n    ...     print(f\"Type {case_type['id']}: {case_type['name']}\")",
+        "http": {
+          "endpoint": "get_case_types",
+          "pathParams": [],
+          "verb": "GET"
+        },
+        "params": []
+      },
+      "get_cases": {
+        "doc": "Get all test cases for a project and optionally a specific suite or section.\n\nArgs:\n    project_id: The ID of the project to get test cases for.\n    suite_id: Optional ID of the suite to get test cases for.\n    section_id: Optional ID of the section to get test cases for.\n    created_after: Optional timestamp to filter cases created after this time.\n    created_before: Optional timestamp to filter cases created before this time.\n    created_by: Optional user ID(s) to filter cases created by specific users.\n    filter: Optional string to filter cases by title.\n    limit: Optional limit on number of results to return.\n    milestone_id: Optional milestone ID(s) to filter cases by milestone.\n    offset: Optional offset for pagination.\n    priority_id: Optional priority ID(s) to filter cases by priority.\n    refs_filter: Optional string to filter cases by references.\n    template_id: Optional template ID(s) to filter cases by template.\n    type_id: Optional type ID(s) to filter cases by type.\n    updated_after: Optional timestamp to filter cases updated after this time.\n    updated_before: Optional timestamp to filter cases updated before this time.\n    updated_by: Optional user ID(s) to filter cases updated by specific users.\n\nReturns:\n    List of dictionaries containing test case data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> cases = api.cases.get_cases(project_id=1, suite_id=2)\n    >>> for case in cases:\n    ...     print(f\"Case {case['id']}: {case['title']}\")",
+        "http": {
+          "endpoint": "get_cases/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "suite_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "section_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "created_after",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "created_before",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "created_by",
+            "required": false,
+            "type": "int | list[int] | None"
+          },
+          {
+            "default": "None",
+            "name": "filter",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "limit",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "milestone_id",
+            "required": false,
+            "type": "int | list[int] | None"
+          },
+          {
+            "default": "None",
+            "name": "offset",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "priority_id",
+            "required": false,
+            "type": "int | list[int] | None"
+          },
+          {
+            "default": "None",
+            "name": "refs_filter",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "template_id",
+            "required": false,
+            "type": "int | list[int] | None"
+          },
+          {
+            "default": "None",
+            "name": "type_id",
+            "required": false,
+            "type": "int | list[int] | None"
+          },
+          {
+            "default": "None",
+            "name": "updated_after",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "updated_before",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "updated_by",
+            "required": false,
+            "type": "int | list[int] | None"
+          }
+        ]
+      },
+      "get_field_options": {
+        "doc": "Get valid options for a specific custom field.\n\nThis method returns the complete list of valid options for dropdown,\nmulti-select, and other fields that have predefined choices. Useful\nfor discovering what values are valid before creating test cases.\n\nArgs:\n    field_name: The system name of the field (e.g., 'custom_automation_type',\n               'custom_interface_type'). Can be specified with or without\n               the 'custom_' prefix.\n    use_cache: Whether to use cached field data (default: True).\n\nReturns:\n    Dictionary with field options:\n    {\n        \"field_name\": \"custom_automation_type\",\n        \"label\": \"Automation Type\",\n        \"type_id\": 6,\n        \"type_name\": \"Dropdown\",\n        \"options\": [\n            {\"id\": \"0\", \"label\": \"None\"},\n            {\"id\": \"1\", \"label\": \"Selenium C#\"},\n            ...\n        ],\n        \"is_required\": True,\n        \"default_value\": \"0\",\n        \"format_hint\": \"Use the numeric 'id' value (e.g., 1 for 'Selenium C#')\"\n    }\n\nRaises:\n    ValueError: If the field is not found.\n\nExample:\n    >>> options = api.cases.get_field_options('custom_automation_type')\n    >>> print(f\"Valid values for {options['label']}:\")\n    >>> for opt in options['options']:\n    ...     print(f\"  {opt['id']}: {opt['label']}\")",
+        "params": [
+          {
+            "name": "field_name",
+            "required": true,
+            "type": "str"
+          },
+          {
+            "default": "True",
+            "name": "use_cache",
+            "required": false,
+            "type": "bool"
+          }
+        ],
+        "unsupported": "Composite helper with no direct API call; use the underlying endpoints instead."
+      },
+      "get_history_for_case": {
+        "doc": "Get the change history of a test case.\n\nArgs:\n    case_id: The ID of the test case to get history for.\n    limit: Optional limit on number of results to return.\n    offset: Optional offset for pagination.\n\nReturns:\n    List of dictionaries containing change history data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> history = api.cases.get_history_for_case(123)\n    >>> for change in history:\n    ...     print(f\"Changed by {change['user']} on {change['created_on']}\")",
+        "http": {
+          "endpoint": "get_history_for_case/{case_id}",
+          "pathParams": [
+            "case_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "case_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "limit",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "offset",
+            "required": false,
+            "type": "int | None"
+          }
+        ]
+      },
+      "get_required_case_fields": {
+        "doc": "Get required case fields for creating test cases, optionally filtered by project.\n\nThis method queries TestRail to determine which fields are required when creating\na new test case. Field requirements can vary by project configuration.\n\nArgs:\n    project_id: Optional project ID to filter requirements. If provided, only returns\n               fields required for that specific project. If None, returns all required\n               fields across all projects.\n    use_cache: Whether to use cached field data (default: True). Set to False to\n              fetch fresh data from TestRail API.\n\nReturns:\n    Dictionary with required field information:\n    {\n        \"required_fields\": [\n            {\n                \"system_name\": \"custom_automation_type\",\n                \"label\": \"Automation Type\",\n                \"type_id\": 1,\n                \"type_name\": \"String\",\n                \"type_hint\": \"string\",\n                \"is_global\": True,\n                \"project_ids\": None,\n                \"description\": \"The automation type for the test case\"\n            },\n            ...\n        ],\n        \"field_count\": 5,\n        \"project_filtered\": True/False,\n        \"cache_used\": True/False\n    }\n\nRaises:\n    Exception: If unable to fetch case fields from TestRail API.\n\nExample:\n    >>> # Get all required fields\n    >>> result = api.cases.get_required_case_fields()\n    >>> print(f\"Found {result['field_count']} required fields\")\n    >>> for field in result['required_fields']:\n    ...     print(f\"  {field['system_name']}: {field['type_hint']}\")\n\n    >>> # Get required fields for a specific project\n    >>> result = api.cases.get_required_case_fields(project_id=1)\n    >>> print(f\"Project 1 requires {result['field_count']} fields\")",
+        "params": [
+          {
+            "default": "None",
+            "name": "project_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "suite_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "template_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "section_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "True",
+            "name": "use_cache",
+            "required": false,
+            "type": "bool"
+          }
+        ],
+        "unsupported": "Composite helper with no direct API call; use the underlying endpoints instead."
+      },
+      "move_cases_to_section": {
+        "doc": "Move test cases to a different section.\n\nArgs:\n    section_id: The ID of the target section.\n    suite_id: Optional ID of the suite containing the cases.\n    case_ids: Optional list of test case IDs to move. If None,\n        all cases are moved.\n\nReturns:\n    List of dictionaries containing the moved test case data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> moved_cases = api.cases.move_cases_to_section(5, case_ids=[1, 2, 3])",
+        "http": {
+          "endpoint": "move_cases_to_section/{section_id}",
+          "pathParams": [
+            "section_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "section_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "suite_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "case_ids",
+            "required": false,
+            "type": "list[int] | None"
+          }
+        ]
+      },
+      "update_case": {
+        "doc": "Update a test case.\n\nArgs:\n    case_id: The ID of the test case to update.\n    title: Optional new title for the test case.\n    template_id: Optional new template ID.\n    type_id: Optional new type ID.\n    priority_id: Optional new priority ID.\n    estimate: Optional new estimate.\n    milestone_id: Optional new milestone ID.\n    refs: Optional new references.\n    description: Optional new description.\n    preconditions: Optional new preconditions.\n    postconditions: Optional new postconditions.\n    custom_fields: Optional custom field values to update.\n\nReturns:\n    Dict containing the updated test case data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> updated_case = api.cases.update_case(\n    ...     case_id=123,\n    ...     title=\"Updated Login Test\",\n    ...     priority_id=1\n    ... )",
+        "http": {
+          "endpoint": "update_case/{case_id}",
+          "pathParams": [
+            "case_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "case_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "title",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "template_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "type_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "priority_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "estimate",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "milestone_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "refs",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "description",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "preconditions",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "postconditions",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "custom_fields",
+            "required": false,
+            "type": "dict[str, Any] | None"
+          }
+        ]
+      },
+      "update_cases": {
+        "doc": "Update multiple test cases at once (bulk update).\n\nArgs:\n    suite_id: The ID of the suite containing the cases.\n    cases: List of case dicts to update. Each dict must include\n        an ``id`` field and the fields to update\n        (e.g., ``[{\"id\": 1, \"priority_id\": 2}]``).\n\nReturns:\n    Dict containing the response data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "update_cases/{suite_id}",
+          "pathParams": [
+            "suite_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "suite_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "cases",
+            "required": true,
+            "type": "list[dict[str, Any]]"
+          }
+        ]
+      }
+    }
+  },
+  "configurations": {
+    "description": "API for managing configurations in TestRail. See [ConfigurationsAPI](testrail_api_module/configurations.html) for details.",
+    "methods": {
+      "add_config": {
+        "doc": "Add a new configuration to a configuration group.\n\nArgs:\n    config_group_id: The ID of the configuration group.\n    name: The name of the configuration.\n\nReturns:\n    Dict containing the created configuration data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "add_config/{config_group_id}",
+          "pathParams": [
+            "config_group_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "config_group_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "name",
+            "required": true,
+            "type": "str"
+          }
+        ]
+      },
+      "add_config_group": {
+        "doc": "Add a new configuration group to a project.\n\nArgs:\n    project_id: The ID of the project.\n    name: The name of the configuration group.\n\nReturns:\n    Dict containing the created configuration group data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "add_config_group/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "name",
+            "required": true,
+            "type": "str"
+          }
+        ]
+      },
+      "delete_config": {
+        "doc": "Delete a configuration.\n\nArgs:\n    config_id: The ID of the configuration to delete.\n\nReturns:\n    Dict containing the response data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "delete_config/{config_id}",
+          "pathParams": [
+            "config_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "config_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "delete_config_group": {
+        "doc": "Delete a configuration group and all its configurations.\n\nArgs:\n    config_group_id: The ID of the configuration group.\n\nReturns:\n    Dict containing the response data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "delete_config_group/{config_group_id}",
+          "pathParams": [
+            "config_group_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "config_group_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_configs": {
+        "doc": "Get all configuration groups and their configs for a project.\n\nArgs:\n    project_id: The ID of the project.\n\nReturns:\n    List of configuration group dicts, each containing a\n    'configs' array of individual configurations.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_configs/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "update_config": {
+        "doc": "Update a configuration.\n\nArgs:\n    config_id: The ID of the configuration to update.\n    name: The new name for the configuration.\n\nReturns:\n    Dict containing the updated configuration data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "update_config/{config_id}",
+          "pathParams": [
+            "config_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "config_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "name",
+            "required": true,
+            "type": "str"
+          }
+        ]
+      },
+      "update_config_group": {
+        "doc": "Update a configuration group.\n\nArgs:\n    config_group_id: The ID of the configuration group.\n    name: The new name for the configuration group.\n\nReturns:\n    Dict containing the updated configuration group data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "update_config_group/{config_group_id}",
+          "pathParams": [
+            "config_group_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "config_group_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "name",
+            "required": true,
+            "type": "str"
+          }
+        ]
+      }
+    }
+  },
+  "datasets": {
+    "description": "API for managing datasets in TestRail. See [DatasetsAPI](testrail_api_module/datasets.html) for details.",
+    "methods": {
+      "add_dataset": {
+        "doc": "Add a new dataset to a project.\n\nArgs:\n    project_id: The ID of the project.\n    name: The name of the dataset.\n    variables: Optional list of variable dicts, each with\n        'id' and 'value' keys.\n\nReturns:\n    Dict containing the created dataset data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> dataset = api.datasets.add_dataset(\n    ...     project_id=1,\n    ...     name=\"My Dataset\",\n    ...     variables=[{\"id\": 1, \"value\": \"test\"}]\n    ... )",
+        "http": {
+          "endpoint": "add_dataset/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "name",
+            "required": true,
+            "type": "str"
+          },
+          {
+            "default": "None",
+            "name": "variables",
+            "required": false,
+            "type": "list[dict[str, Any]] | None"
+          }
+        ]
+      },
+      "delete_dataset": {
+        "doc": "Delete a dataset.\n\nArgs:\n    dataset_id: The ID of the dataset to delete.\n\nReturns:\n    Empty dict (TestRail returns an empty body on success).\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> api.datasets.delete_dataset(dataset_id=1)",
+        "http": {
+          "endpoint": "delete_dataset/{dataset_id}",
+          "pathParams": [
+            "dataset_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "dataset_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_dataset": {
+        "doc": "Get a dataset by ID.\n\nArgs:\n    dataset_id: The ID of the dataset to retrieve.\n\nReturns:\n    Dict containing the dataset data with id, name, and\n    variables array.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> dataset = api.datasets.get_dataset(dataset_id=1)",
+        "http": {
+          "endpoint": "get_dataset/{dataset_id}",
+          "pathParams": [
+            "dataset_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "dataset_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_datasets": {
+        "doc": "Get all datasets for a project.\n\nArgs:\n    project_id: The ID of the project to get datasets for.\n\nReturns:\n    List of dictionaries containing dataset data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> datasets = api.datasets.get_datasets(project_id=1)",
+        "http": {
+          "endpoint": "get_datasets/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "update_dataset": {
+        "doc": "Update a dataset.\n\nArgs:\n    dataset_id: The ID of the dataset to update.\n    name: Optional new name for the dataset.\n    variables: Optional list of variable dicts to update.\n\nReturns:\n    Dict containing the updated dataset data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> dataset = api.datasets.update_dataset(\n    ...     dataset_id=1,\n    ...     name=\"Updated Dataset\"\n    ... )",
+        "http": {
+          "endpoint": "update_dataset/{dataset_id}",
+          "pathParams": [
+            "dataset_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "dataset_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "name",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "variables",
+            "required": false,
+            "type": "list[dict[str, Any]] | None"
+          }
+        ]
+      }
+    }
+  },
+  "groups": {
+    "description": "API for managing user groups in TestRail. See [GroupsAPI](testrail_api_module/groups.html) for details.",
+    "methods": {
+      "add_group": {
+        "doc": "Add a new group.\n\nArgs:\n    name: The name of the group.\n    user_ids: Optional list of user IDs to add as members of\n        the group.\n\nReturns:\n    Dict containing the created group data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> group = api.groups.add_group(\n    ...     name=\"Test Group\",\n    ...     user_ids=[1, 2, 3]\n    ... )",
+        "http": {
+          "endpoint": "add_group",
+          "pathParams": [],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "name",
+            "required": true,
+            "type": "str"
+          },
+          {
+            "default": "None",
+            "name": "user_ids",
+            "required": false,
+            "type": "list[int] | None"
+          }
+        ]
+      },
+      "delete_group": {
+        "doc": "Delete a group.\n\nArgs:\n    group_id: The ID of the group to delete.\n\nReturns:\n    Dict containing the response data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> result = api.groups.delete_group(123)",
+        "http": {
+          "endpoint": "delete_group/{group_id}",
+          "pathParams": [
+            "group_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "group_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_group": {
+        "doc": "Get a group by ID.\n\nArgs:\n    group_id: The ID of the group to retrieve.\n\nReturns:\n    Dict containing the group data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> group = api.groups.get_group(123)\n    >>> print(group['name'])",
+        "http": {
+          "endpoint": "get_group/{group_id}",
+          "pathParams": [
+            "group_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "group_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_groups": {
+        "doc": "Get all groups on the TestRail instance.\n\nReturns:\n    List of dictionaries containing group data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> groups = api.groups.get_groups()\n    >>> for group in groups:\n    ...     print(f\"Group: {group['name']}\")",
+        "http": {
+          "endpoint": "get_groups",
+          "pathParams": [],
+          "verb": "GET"
+        },
+        "params": []
+      },
+      "update_group": {
+        "doc": "Update a group.\n\nArgs:\n    group_id: The ID of the group to update.\n    name: Optional new name for the group.\n    user_ids: Optional full list of user IDs for the group.\n        TestRail replaces the group's membership with this\n        list, so always pass the complete member list.\n\nReturns:\n    Dict containing the updated group data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> updated_group = api.groups.update_group(\n    ...     group_id=123,\n    ...     name=\"Updated Group Name\",\n    ...     user_ids=[1, 2, 3]\n    ... )",
+        "http": {
+          "endpoint": "update_group/{group_id}",
+          "pathParams": [
+            "group_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "group_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "name",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "user_ids",
+            "required": false,
+            "type": "list[int] | None"
+          }
+        ]
+      }
+    }
+  },
+  "labels": {
+    "description": "API for managing labels in TestRail. See [LabelsAPI](testrail_api_module/labels.html) for details.",
+    "methods": {
+      "add_label": {
+        "doc": "Add a new label.\n\nArgs:\n    project_id: The ID of the project to add the label to.\n    title: The title of the label (maximum 20 characters).\n\nReturns:\n    Dict containing the created label data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "add_label/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "title",
+            "required": true,
+            "type": "str"
+          }
+        ]
+      },
+      "delete_label": {
+        "doc": "Delete a label.\n\nArgs:\n    label_id: The ID of the label to delete.\n\nReturns:\n    Dict containing the response data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "delete_label/{label_id}",
+          "pathParams": [
+            "label_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "label_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_label": {
+        "doc": "Get a label by ID.\n\nArgs:\n    label_id: The ID of the label to retrieve.\n\nReturns:\n    Dict containing the label data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_label/{label_id}",
+          "pathParams": [
+            "label_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "label_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_labels": {
+        "doc": "Get all labels for a project.\n\nArgs:\n    project_id: The ID of the project to get labels for.\n\nReturns:\n    List of dictionaries containing label data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_labels/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "update_label": {
+        "doc": "Update a label.\n\nArgs:\n    label_id: The ID of the label to update.\n    **kwargs: The fields to update. TestRail accepts\n        ``title`` (maximum 20 characters) and may also\n        require ``project_id``.\n\nReturns:\n    Dict containing the updated label data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "update_label/{label_id}",
+          "pathParams": [
+            "label_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "label_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "kwargs",
+            "required": false,
+            "type": "**kwargs"
+          }
+        ]
+      }
+    }
+  },
+  "milestones": {
+    "description": "API for managing milestones in TestRail. See [MilestonesAPI](testrail_api_module/milestones.html) for details.",
+    "methods": {
+      "add_milestone": {
+        "doc": "Add a new milestone.\n\nArgs:\n    project_id: The ID of the project to add the milestone\n        to.\n    name: The name of the milestone.\n    description: Optional description of the milestone.\n    due_on: Optional due date as a UNIX timestamp.\n    parent_id: Optional ID of the parent milestone.\n    refs: Optional comma-separated list of references.\n    start_on: Optional start date as a UNIX timestamp.\n\nReturns:\n    Dict containing the created milestone data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "add_milestone/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "name",
+            "required": true,
+            "type": "str"
+          },
+          {
+            "default": "None",
+            "name": "description",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "due_on",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "parent_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "refs",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "start_on",
+            "required": false,
+            "type": "int | None"
+          }
+        ]
+      },
+      "delete_milestone": {
+        "doc": "Delete a milestone.\n\nArgs:\n    milestone_id: The ID of the milestone to delete.\n\nReturns:\n    Dict containing the response data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "delete_milestone/{milestone_id}",
+          "pathParams": [
+            "milestone_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "milestone_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_milestone": {
+        "doc": "Get a milestone by ID.\n\nArgs:\n    milestone_id: The ID of the milestone to retrieve.\n\nReturns:\n    Dict containing the milestone data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_milestone/{milestone_id}",
+          "pathParams": [
+            "milestone_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "milestone_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_milestones": {
+        "doc": "Get all milestones for a project.\n\nArgs:\n    project_id: The ID of the project to get milestones for.\n    is_completed: Optional filter to return only completed or\n        active milestones.\n    is_started: Optional filter to return only started or\n        not-yet-started milestones.\n\nReturns:\n    List of dictionaries containing milestone data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_milestones/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "is_completed",
+            "required": false,
+            "type": "bool | None"
+          },
+          {
+            "default": "None",
+            "name": "is_started",
+            "required": false,
+            "type": "bool | None"
+          }
+        ]
+      },
+      "update_milestone": {
+        "doc": "Update a milestone.\n\nArgs:\n    milestone_id: The ID of the milestone to update.\n    name: Optional new name for the milestone.\n    description: Optional description of the milestone.\n    due_on: Optional due date as a UNIX timestamp.\n    is_completed: Whether the milestone is completed.\n    is_started: Whether the milestone has been started.\n    parent_id: Optional ID of the parent milestone.\n    refs: Optional comma-separated list of references.\n    start_on: Optional start date as a UNIX timestamp.\n\nReturns:\n    Dict containing the updated milestone data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "update_milestone/{milestone_id}",
+          "pathParams": [
+            "milestone_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "milestone_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "name",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "description",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "due_on",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "is_completed",
+            "required": false,
+            "type": "bool | None"
+          },
+          {
+            "default": "None",
+            "name": "is_started",
+            "required": false,
+            "type": "bool | None"
+          },
+          {
+            "default": "None",
+            "name": "parent_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "refs",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "start_on",
+            "required": false,
+            "type": "int | None"
+          }
+        ]
+      }
+    }
+  },
+  "plans": {
+    "description": "API for managing test plans in TestRail. See [PlansAPI](testrail_api_module/plans.html) for details.",
+    "methods": {
+      "add_plan": {
+        "doc": "Add a new test plan.\n\nArgs:\n    project_id: The ID of the project to add the plan to.\n    name: The name of the test plan.\n    description: Optional description of the test plan.\n    milestone_id: Optional ID of the milestone to link to.\n    entries: Optional list of plan entries, each containing:\n        - suite_id (int): The ID of the test suite\n        - name (str): The name of the test run\n        - assignedto_id (int, optional): User to assign to\n        - include_all (bool, optional): Include all cases\n        - case_ids (list, optional): Case IDs to include\n\nReturns:\n    Dict containing the created test plan data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "add_plan/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "name",
+            "required": true,
+            "type": "str"
+          },
+          {
+            "default": "None",
+            "name": "description",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "milestone_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "entries",
+            "required": false,
+            "type": "list[dict[str, Any]] | None"
+          }
+        ]
+      },
+      "add_plan_entry": {
+        "doc": "Add a new test plan entry (a test run) to an existing plan.\n\nArgs:\n    plan_id: The ID of the test plan.\n    suite_id: The ID of the test suite for the entry.\n    name: Optional name of the test run.\n    description: Optional description of the test run.\n    assignedto_id: Optional ID of the user to assign to.\n    include_all: Whether to include all test cases\n        (default True). Always sent explicitly in the\n        payload, mirroring add_run.\n    case_ids: Optional list of case IDs to include.\n    config_ids: Optional list of configuration IDs.\n    runs: Optional list of run objects for multi-config\n        entries.\n\nReturns:\n    Dict containing the created plan entry data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "add_plan_entry/{plan_id}",
+          "pathParams": [
+            "plan_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "plan_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "suite_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "name",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "description",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "assignedto_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "True",
+            "name": "include_all",
+            "required": false,
+            "type": "bool"
+          },
+          {
+            "default": "None",
+            "name": "case_ids",
+            "required": false,
+            "type": "list[int] | None"
+          },
+          {
+            "default": "None",
+            "name": "config_ids",
+            "required": false,
+            "type": "list[int] | None"
+          },
+          {
+            "default": "None",
+            "name": "runs",
+            "required": false,
+            "type": "list[dict[str, Any]] | None"
+          }
+        ]
+      },
+      "add_run_to_plan_entry": {
+        "doc": "Add a new test run to a plan entry that uses configurations.\n\nRequires TestRail 6.4 or later.\n\nArgs:\n    plan_id: The ID of the test plan.\n    entry_id: The ID of the plan entry to add the run to.\n    config_ids: List of configuration IDs for the new run\n        (required).\n    description: Optional description of the test run.\n    assignedto_id: Optional ID of the user to assign to.\n    include_all: Whether to include all test cases\n        (default True). Always sent explicitly in the\n        payload, mirroring add_run.\n    case_ids: Optional list of case IDs to include.\n    refs: Optional comma-separated list of references.\n\nReturns:\n    Dict containing the updated plan entry data (same format\n    as the entries field of get_plan, for a single entry).\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "add_run_to_plan_entry/{plan_id}/{entry_id}",
+          "pathParams": [
+            "plan_id",
+            "entry_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "plan_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "entry_id",
+            "required": true,
+            "type": "str"
+          },
+          {
+            "name": "config_ids",
+            "required": true,
+            "type": "list[int]"
+          },
+          {
+            "default": "None",
+            "name": "description",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "assignedto_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "True",
+            "name": "include_all",
+            "required": false,
+            "type": "bool"
+          },
+          {
+            "default": "None",
+            "name": "case_ids",
+            "required": false,
+            "type": "list[int] | None"
+          },
+          {
+            "default": "None",
+            "name": "refs",
+            "required": false,
+            "type": "str | None"
+          }
+        ]
+      },
+      "close_plan": {
+        "doc": "Close a test plan.\n\nArgs:\n    plan_id: The ID of the test plan to close.\n\nReturns:\n    Dict containing the response data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "close_plan/{plan_id}",
+          "pathParams": [
+            "plan_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "plan_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "delete_plan": {
+        "doc": "Delete a test plan.\n\nArgs:\n    plan_id: The ID of the test plan to delete.\n\nReturns:\n    Dict containing the response data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "delete_plan/{plan_id}",
+          "pathParams": [
+            "plan_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "plan_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "delete_plan_entry": {
+        "doc": "Delete a test plan entry.\n\nArgs:\n    plan_id: The ID of the test plan.\n    entry_id: The ID of the plan entry to delete.\n\nReturns:\n    Dict containing the response data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "delete_plan_entry/{plan_id}/{entry_id}",
+          "pathParams": [
+            "plan_id",
+            "entry_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "plan_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "entry_id",
+            "required": true,
+            "type": "str"
+          }
+        ]
+      },
+      "delete_run_from_plan_entry": {
+        "doc": "Delete a test run from a plan entry that uses configurations.\n\nRequires TestRail 6.4 or later.\n\nArgs:\n    run_id: The ID of the test run to delete.\n\nReturns:\n    Dict containing the response data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "delete_run_from_plan_entry/{run_id}",
+          "pathParams": [
+            "run_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "run_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_plan": {
+        "doc": "Get a test plan by ID.\n\nArgs:\n    plan_id: The ID of the test plan to retrieve.\n\nReturns:\n    Dict containing the test plan data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_plan/{plan_id}",
+          "pathParams": [
+            "plan_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "plan_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_plans": {
+        "doc": "Get all test plans for a project.\n\nArgs:\n    project_id: The ID of the project to get test plans for.\n    created_after: Optional timestamp to filter plans created\n        after this time.\n    created_before: Optional timestamp to filter plans created\n        before this time.\n    created_by: Optional user ID to filter plans created by a\n        specific user.\n    is_completed: Optional boolean to filter by completion\n        status.\n    milestone_id: Optional milestone ID to filter plans by.\n    limit: Optional limit on number of results to return.\n    offset: Optional offset for pagination.\n\nReturns:\n    Dict containing the pagination envelope with keys\n    ``offset``, ``limit``, ``size``, ``_links``, and ``plans``\n    (the list of test plan dicts).\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_plans/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "created_after",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "created_before",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "created_by",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "is_completed",
+            "required": false,
+            "type": "bool | None"
+          },
+          {
+            "default": "None",
+            "name": "milestone_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "limit",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "offset",
+            "required": false,
+            "type": "int | None"
+          }
+        ]
+      },
+      "update_plan": {
+        "doc": "Update a test plan.\n\nArgs:\n    plan_id: The ID of the test plan to update.\n    **kwargs: Fields to update (name, description,\n        milestone_id, entries).\n\nReturns:\n    Dict containing the updated test plan data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "update_plan/{plan_id}",
+          "pathParams": [
+            "plan_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "plan_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "kwargs",
+            "required": false,
+            "type": "**kwargs"
+          }
+        ]
+      },
+      "update_plan_entry": {
+        "doc": "Update an existing test plan entry.\n\nArgs:\n    plan_id: The ID of the test plan.\n    entry_id: The ID of the plan entry to update.\n    **kwargs: Fields to update (name, description,\n        assignedto_id, include_all, case_ids, etc.).\n\nReturns:\n    Dict containing the updated plan entry data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "update_plan_entry/{plan_id}/{entry_id}",
+          "pathParams": [
+            "plan_id",
+            "entry_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "plan_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "entry_id",
+            "required": true,
+            "type": "str"
+          },
+          {
+            "name": "kwargs",
+            "required": false,
+            "type": "**kwargs"
+          }
+        ]
+      },
+      "update_run_in_plan_entry": {
+        "doc": "Update a test run inside a plan entry that uses\nconfigurations.\n\nRequires TestRail 6.4 or later. Only fields that are provided\n(not None) are sent, so partial updates are supported.\n\nArgs:\n    run_id: The ID of the test run to update.\n    description: Optional new description of the test run.\n    assignedto_id: Optional ID of the user to assign to.\n    include_all: Optional flag to include all test cases\n        (set False and pass case_ids for a custom selection).\n    case_ids: Optional list of case IDs to include.\n    refs: Optional comma-separated list of references.\n\nReturns:\n    Dict containing the updated test run data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "update_run_in_plan_entry/{run_id}",
+          "pathParams": [
+            "run_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "run_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "description",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "assignedto_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "include_all",
+            "required": false,
+            "type": "bool | None"
+          },
+          {
+            "default": "None",
+            "name": "case_ids",
+            "required": false,
+            "type": "list[int] | None"
+          },
+          {
+            "default": "None",
+            "name": "refs",
+            "required": false,
+            "type": "str | None"
+          }
+        ]
+      }
+    }
+  },
+  "priorities": {
+    "description": "API for managing test priorities in TestRail. See [PrioritiesAPI](testrail_api_module/priorities.html) for details.",
+    "methods": {
+      "get_priorities": {
+        "doc": "Get all available priorities.\n\nReturns:\n    List of dictionaries containing priority data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_priorities",
+          "pathParams": [],
+          "verb": "GET"
+        },
+        "params": []
+      }
+    }
+  },
+  "projects": {
+    "description": "API for managing projects in TestRail. See [ProjectsAPI](testrail_api_module/projects.html) for details.",
+    "methods": {
+      "add_project": {
+        "doc": "Add a new project.\n\nArgs:\n    name: The name of the project.\n    announcement: Optional announcement text for the project.\n    show_announcement: Whether to show the announcement.\n    suite_mode: The suite mode of the project (1 for single\n        suite, 2 for single suite with baselines, 3 for\n        multiple suites).\n\nReturns:\n    Dict containing the created project data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "add_project",
+          "pathParams": [],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "name",
+            "required": true,
+            "type": "str"
+          },
+          {
+            "default": "None",
+            "name": "announcement",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "show_announcement",
+            "required": false,
+            "type": "bool | None"
+          },
+          {
+            "default": "None",
+            "name": "suite_mode",
+            "required": false,
+            "type": "int | None"
+          }
+        ]
+      },
+      "delete_project": {
+        "doc": "Delete a project.\n\nArgs:\n    project_id: The ID of the project to delete.\n\nReturns:\n    Dict containing the response data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "delete_project/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_project": {
+        "doc": "Get a project by ID.\n\nArgs:\n    project_id: The ID of the project to retrieve.\n\nReturns:\n    Dict containing the project data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_project/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_projects": {
+        "doc": "Get all projects.\n\nArgs:\n    is_completed: Optional filter to return only completed or\n        active projects.\n\nReturns:\n    List of dictionaries containing project data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_projects",
+          "pathParams": [],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "default": "None",
+            "name": "is_completed",
+            "required": false,
+            "type": "bool | None"
+          }
+        ]
+      },
+      "update_project": {
+        "doc": "Update a project.\n\nArgs:\n    project_id: The ID of the project to update.\n    name: Optional new name for the project.\n    announcement: Optional announcement text for the project.\n    show_announcement: Whether to show the announcement.\n    is_completed: Whether the project is completed.\n    suite_mode: The suite mode of the project.\n\nReturns:\n    Dict containing the updated project data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "update_project/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "name",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "announcement",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "show_announcement",
+            "required": false,
+            "type": "bool | None"
+          },
+          {
+            "default": "None",
+            "name": "is_completed",
+            "required": false,
+            "type": "bool | None"
+          },
+          {
+            "default": "None",
+            "name": "suite_mode",
+            "required": false,
+            "type": "int | None"
+          }
+        ]
+      }
+    }
+  },
+  "reports": {
+    "description": "API for managing reports in TestRail. See [ReportsAPI](testrail_api_module/reports.html) for details.",
+    "methods": {
+      "get_reports": {
+        "doc": "Get all reports for a project.\n\nArgs:\n    project_id: The ID of the project to get reports for.\n\nReturns:\n    List of dictionaries containing report data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_reports/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "run_report": {
+        "doc": "Run a report to generate results.\n\nThe TestRail API requires POST for this endpoint. Returns URLs\nto the generated report in HTML and PDF formats.\n\nArgs:\n    report_template_id: The ID of the report template to run.\n\nReturns:\n    Dict containing the report results including URLs to the\n    generated report.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "run_report/{report_template_id}",
+          "pathParams": [
+            "report_template_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "report_template_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      }
+    }
+  },
+  "result_fields": {
+    "description": "API for managing result fields in TestRail. See [ResultFieldsAPI](testrail_api_module/result_fields.html) for details.",
+    "methods": {
+      "get_result_fields": {
+        "doc": "Get all custom result fields.\n\nReturns:\n    List of dictionaries containing custom result field data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_result_fields",
+          "pathParams": [],
+          "verb": "GET"
+        },
+        "params": []
+      }
+    }
+  },
+  "results": {
+    "description": "API for managing test results in TestRail. See [ResultsAPI](testrail_api_module/results.html) for details.",
+    "methods": {
+      "add_result": {
+        "doc": "Add a test result for a specific test (by test ID).\n\nArgs:\n    test_id: The ID of the test.\n    status_id: Optional status ID (1: Passed, 2: Blocked,\n        3: Untested, 4: Retest, 5: Failed).\n    comment: Optional comment for the test result.\n    version: Optional version of the software under test.\n    elapsed: Optional time taken (e.g., \"30s\", \"2m 30s\").\n    defects: Optional comma-separated list of defects.\n    assignedto_id: Optional user ID to assign to.\n    custom_fields: Optional custom field values.\n\nReturns:\n    Dict containing the created test result data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> result = api.results.add_result(\n    ...     test_id=42,\n    ...     status_id=1,\n    ...     comment=\"Test passed successfully\"\n    ... )",
+        "http": {
+          "endpoint": "add_result/{test_id}",
+          "pathParams": [
+            "test_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "test_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "status_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "comment",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "version",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "elapsed",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "defects",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "assignedto_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "custom_fields",
+            "required": false,
+            "type": "dict[str, Any] | None"
+          }
+        ]
+      },
+      "add_result_for_case": {
+        "doc": "Add a test result for a specific test case in a test run.\n\nArgs:\n    run_id: The ID of the test run.\n    case_id: The ID of the test case.\n    status_id: Optional status ID (1: Passed, 2: Blocked,\n        3: Untested, 4: Retest, 5: Failed).\n    comment: Optional comment for the test result.\n    version: Optional version of the software under test.\n    elapsed: Optional time taken (e.g., \"30s\", \"2m 30s\").\n    defects: Optional comma-separated list of defects.\n    assignedto_id: Optional user ID to assign to.\n    custom_fields: Optional custom field values.\n\nReturns:\n    Dict containing the created test result data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> result = api.results.add_result_for_case(\n    ...     run_id=1,\n    ...     case_id=123,\n    ...     status_id=1,\n    ...     comment=\"Test passed successfully\",\n    ...     elapsed=\"30s\"\n    ... )",
+        "http": {
+          "endpoint": "add_result_for_case/{run_id}/{case_id}",
+          "pathParams": [
+            "run_id",
+            "case_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "run_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "case_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "status_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "comment",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "version",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "elapsed",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "defects",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "assignedto_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "custom_fields",
+            "required": false,
+            "type": "dict[str, Any] | None"
+          }
+        ]
+      },
+      "add_results": {
+        "doc": "Add multiple test results for tests in a run (by test ID).\n\nArgs:\n    run_id: The ID of the test run.\n    results: List of result dicts, each containing:\n        - test_id: The ID of the test\n        - status_id: The status ID\n        - comment: Optional comment\n        - version: Optional version string\n        - elapsed: Optional elapsed time\n        - defects: Optional defects string\n        - assignedto_id: Optional user ID\n\nReturns:\n    List of created test result dicts.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> results_data = [\n    ...     {\"test_id\": 101, \"status_id\": 1},\n    ...     {\"test_id\": 102, \"status_id\": 5}\n    ... ]\n    >>> api.results.add_results(run_id=1, results=results_data)",
+        "http": {
+          "endpoint": "add_results/{run_id}",
+          "pathParams": [
+            "run_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "run_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "results",
+            "required": true,
+            "type": "list[dict[str, Any]]"
+          }
+        ]
+      },
+      "add_results_for_cases": {
+        "doc": "Add multiple test results for test cases in a test run.\n\nArgs:\n    run_id: The ID of the test run.\n    results: List of dictionaries containing test result data for each case.\n            Each result should include:\n            - case_id: The ID of the test case\n            - status_id: The status ID of the test result\n            - comment: Optional comment for the test result\n            - version: Optional version of the software under test\n            - elapsed: Optional time taken to execute the test\n            - defects: Optional comma-separated list of defects\n            - assignedto_id: Optional ID of the user the test is assigned to\n            - custom_fields: Optional dictionary of custom field values\n\nReturns:\n    List of created test result dicts (one per submitted case).\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> results_data = [\n    ...     {\"case_id\": 1, \"status_id\": 1, \"comment\": \"Passed\"},\n    ...     {\"case_id\": 2, \"status_id\": 5, \"comment\": \"Failed\"}\n    ... ]\n    >>> result = api.results.add_results_for_cases(run_id=1, results=results_data)",
+        "http": {
+          "endpoint": "add_results_for_cases/{run_id}",
+          "pathParams": [
+            "run_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "run_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "results",
+            "required": true,
+            "type": "list[dict[str, Any]]"
+          }
+        ]
+      },
+      "get_results": {
+        "doc": "Get all results for a specific test.\n\nArgs:\n    test_id: The ID of the test.\n    defects_filter: Optional defect ID to filter by\n        (e.g., 'TR-1', '4291').\n    limit: Optional limit on number of results.\n    offset: Optional offset for pagination.\n    status_id: Optional status ID(s) to filter by.\n\nReturns:\n    List of dictionaries containing test result data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> results = api.results.get_results(test_id=42)",
+        "http": {
+          "endpoint": "get_results/{test_id}",
+          "pathParams": [
+            "test_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "test_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "defects_filter",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "limit",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "offset",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "status_id",
+            "required": false,
+            "type": "int | list[int] | None"
+          }
+        ]
+      },
+      "get_results_for_case": {
+        "doc": "Get all test results for a specific test case in a test run.\n\nArgs:\n    run_id: The ID of the test run.\n    case_id: The ID of the test case.\n    defects_filter: Optional defect ID to filter by\n        (e.g., 'TR-1', '4291').\n    limit: Optional limit on number of results to return.\n    offset: Optional offset for pagination.\n    status_id: Optional status ID(s) to filter by.\n\nReturns:\n    List of dictionaries containing test result data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> results = api.results.get_results_for_case(\n    ...     run_id=1, case_id=123\n    ... )",
+        "http": {
+          "endpoint": "get_results_for_case/{run_id}/{case_id}",
+          "pathParams": [
+            "run_id",
+            "case_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "run_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "case_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "defects_filter",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "limit",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "offset",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "status_id",
+            "required": false,
+            "type": "int | list[int] | None"
+          }
+        ]
+      },
+      "get_results_for_run": {
+        "doc": "Get all test results for a test run.\n\nArgs:\n    run_id: The ID of the test run.\n    status_id: Optional status ID(s) to filter by (comma-separated if multiple).\n    created_after: Optional timestamp to filter results created after this time.\n    created_before: Optional timestamp to filter results created before this time.\n    created_by: Optional user ID(s) to filter results created by specific users.\n    defects_filter: Optional defect ID to filter by (e.g., 'TR-1', '4291').\n    limit: Optional limit on number of results to return (default 250).\n    offset: Optional offset for pagination.\n\nReturns:\n    List of dictionaries containing test result data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> results = api.results.get_results_for_run(run_id=1)\n    >>> # Filter by status and created date\n    >>> results = api.results.get_results_for_run(\n    ...     run_id=1,\n    ...     status_id=[1, 5],\n    ...     created_after=1609459200,\n    ...     limit=50\n    ... )",
+        "http": {
+          "endpoint": "get_results_for_run/{run_id}",
+          "pathParams": [
+            "run_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "run_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "status_id",
+            "required": false,
+            "type": "int | list[int] | None"
+          },
+          {
+            "default": "None",
+            "name": "created_after",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "created_before",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "created_by",
+            "required": false,
+            "type": "int | list[int] | None"
+          },
+          {
+            "default": "None",
+            "name": "defects_filter",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "limit",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "offset",
+            "required": false,
+            "type": "int | None"
+          }
+        ]
+      }
+    }
+  },
+  "roles": {
+    "description": "API for managing user roles in TestRail. See [RolesAPI](testrail_api_module/roles.html) for details.",
+    "methods": {
+      "get_roles": {
+        "doc": "Get all roles.\n\nReturns:\n    List of dictionaries containing role data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_roles",
+          "pathParams": [],
+          "verb": "GET"
+        },
+        "params": []
+      }
+    }
+  },
+  "runs": {
+    "description": "API for managing test runs in TestRail. See [RunsAPI](testrail_api_module/runs.html) for details.",
+    "methods": {
+      "add_run": {
+        "doc": "Add a new test run.\n\nArgs:\n    project_id: The ID of the project to add the test run to.\n    name: The name of the test run.\n    description: Optional description of the test run.\n    suite_id: Optional ID of the suite to add the test run to.\n    milestone_id: Optional ID of the milestone to add the test run to.\n    assignedto_id: Optional ID of the user to assign the test run to.\n    include_all: Whether to include all test cases from the suite.\n    case_ids: Optional list of test case IDs to include in the run.\n    refs: Optional comma-separated list of references\n        (requires TestRail 6.1+).\n\nReturns:\n    Dict containing the created test run data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> run = api.runs.add_run(\n    ...     project_id=1,\n    ...     name=\"Test Run\",\n    ...     description=\"Automated test run\",\n    ...     suite_id=2,\n    ...     include_all=True\n    ... )",
+        "http": {
+          "endpoint": "add_run/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "name",
+            "required": true,
+            "type": "str"
+          },
+          {
+            "default": "None",
+            "name": "description",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "suite_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "milestone_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "assignedto_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "True",
+            "name": "include_all",
+            "required": false,
+            "type": "bool"
+          },
+          {
+            "default": "None",
+            "name": "case_ids",
+            "required": false,
+            "type": "list[int] | None"
+          },
+          {
+            "default": "None",
+            "name": "refs",
+            "required": false,
+            "type": "str | None"
+          }
+        ]
+      },
+      "close_run": {
+        "doc": "Close a test run.\n\nArgs:\n    run_id: The ID of the test run to close.\n\nReturns:\n    Dict containing the response data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> result = api.runs.close_run(123)",
+        "http": {
+          "endpoint": "close_run/{run_id}",
+          "pathParams": [
+            "run_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "run_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "delete_run": {
+        "doc": "Delete a test run.\n\nArgs:\n    run_id: The ID of the test run to delete.\n\nReturns:\n    Dict containing the response data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> result = api.runs.delete_run(123)",
+        "http": {
+          "endpoint": "delete_run/{run_id}",
+          "pathParams": [
+            "run_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "run_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_run": {
+        "doc": "Get a test run by ID.\n\nArgs:\n    run_id: The ID of the test run to retrieve.\n\nReturns:\n    Dict containing the test run data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> run = api.runs.get_run(123)\n    >>> print(f\"Run: {run['name']}\")",
+        "http": {
+          "endpoint": "get_run/{run_id}",
+          "pathParams": [
+            "run_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "run_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_runs": {
+        "doc": "Get all test runs for a project and optionally a specific suite.\n\nArgs:\n    project_id: The ID of the project to get test runs for.\n    suite_id: Optional ID of the suite to get test runs for.\n    created_after: Optional timestamp to filter runs created after this time.\n    created_before: Optional timestamp to filter runs created before this time.\n    created_by: Optional user ID to filter runs created by specific user.\n    is_completed: Optional boolean to filter by completion status.\n    milestone_id: Optional milestone ID to filter runs by.\n    limit: Optional limit on number of results to return.\n    offset: Optional offset for pagination.\n\nReturns:\n    Dict containing the pagination envelope with keys\n    ``offset``, ``limit``, ``size``, ``_links``, and ``runs``\n    (the list of test run dicts).\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> response = api.runs.get_runs(project_id=1, suite_id=2)\n    >>> for run in response[\"runs\"]:\n    ...     print(f\"Run: {run['name']}\")",
+        "http": {
+          "endpoint": "get_runs/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "suite_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "created_after",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "created_before",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "created_by",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "is_completed",
+            "required": false,
+            "type": "bool | None"
+          },
+          {
+            "default": "None",
+            "name": "milestone_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "limit",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "offset",
+            "required": false,
+            "type": "int | None"
+          }
+        ]
+      },
+      "update_run": {
+        "doc": "Update a test run.\n\nSupports the same fields as :meth:`add_run` minus ``suite_id``.\nOnly fields that are provided (not None) are sent, so partial\nupdates are supported.\n\nArgs:\n    run_id: The ID of the test run to update.\n    name: Optional new name for the test run.\n    description: Optional new description for the test run.\n    milestone_id: Optional new milestone ID.\n    assignedto_id: Optional new assigned user ID.\n    include_all: Optional flag to include all test cases from\n        the suite (set False and pass case_ids to select a\n        custom case selection).\n    case_ids: Optional list of test case IDs to include in\n        the run.\n    refs: Optional comma-separated list of references\n        (requires TestRail 6.1+).\n\nReturns:\n    Dict containing the updated test run data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> updated_run = api.runs.update_run(\n    ...     run_id=123,\n    ...     name=\"Updated Run Name\",\n    ...     include_all=False,\n    ...     case_ids=[1, 2, 3]\n    ... )",
+        "http": {
+          "endpoint": "update_run/{run_id}",
+          "pathParams": [
+            "run_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "run_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "name",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "description",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "milestone_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "assignedto_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "include_all",
+            "required": false,
+            "type": "bool | None"
+          },
+          {
+            "default": "None",
+            "name": "case_ids",
+            "required": false,
+            "type": "list[int] | None"
+          },
+          {
+            "default": "None",
+            "name": "refs",
+            "required": false,
+            "type": "str | None"
+          }
+        ]
+      }
+    }
+  },
+  "sections": {
+    "description": "API for managing test sections in TestRail. See [SectionsAPI](testrail_api_module/sections.html) for details.",
+    "methods": {
+      "add_section": {
+        "doc": "Add a new section.\n\nArgs:\n    project_id: The ID of the project to add the section to.\n    name: The name of the section.\n    description: Optional description of the section.\n    suite_id: Optional ID of the suite to add the section to.\n    parent_id: Optional ID of the parent section.\n\nReturns:\n    Dict containing the created section data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> section = api.sections.add_section(\n    ...     project_id=1,\n    ...     name=\"New Section\",\n    ...     description=\"A new test section\",\n    ...     suite_id=2,\n    ...     parent_id=5\n    ... )",
+        "http": {
+          "endpoint": "add_section/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "name",
+            "required": true,
+            "type": "str"
+          },
+          {
+            "default": "None",
+            "name": "description",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "suite_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "parent_id",
+            "required": false,
+            "type": "int | None"
+          }
+        ]
+      },
+      "delete_section": {
+        "doc": "Delete a section.\n\nArgs:\n    section_id: The ID of the section to delete.\n\nReturns:\n    Dict containing the response data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> result = api.sections.delete_section(123)",
+        "http": {
+          "endpoint": "delete_section/{section_id}",
+          "pathParams": [
+            "section_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "section_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_section": {
+        "doc": "Get a section by ID.\n\nArgs:\n    section_id: The ID of the section to retrieve.\n\nReturns:\n    Dict containing the section data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> section = api.sections.get_section(123)\n    >>> print(f\"Section: {section['name']}\")",
+        "http": {
+          "endpoint": "get_section/{section_id}",
+          "pathParams": [
+            "section_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "section_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_sections": {
+        "doc": "Get all sections for a project and optionally a specific suite.\n\nArgs:\n    project_id: The ID of the project to get sections for.\n    suite_id: Optional ID of the suite to get sections for.\n    limit: Optional limit on number of results to return\n        (TestRail returns up to 250 by default).\n    offset: Optional offset for pagination.\n\nReturns:\n    On TestRail 6.7+ this endpoint returns a pagination\n    envelope ``{\"offset\": ..., \"limit\": ..., \"size\": ...,\n    \"_links\": ..., \"sections\": [...]}``; older TestRail\n    versions return a plain list of section dictionaries.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> response = api.sections.get_sections(\n    ...     project_id=1, suite_id=2\n    ... )\n    >>> for section in response[\"sections\"]:\n    ...     print(f\"Section: {section['name']}\")",
+        "http": {
+          "endpoint": "get_sections/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "suite_id",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "limit",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "offset",
+            "required": false,
+            "type": "int | None"
+          }
+        ]
+      },
+      "move_section": {
+        "doc": "Move a section to a different parent or position.\n\nRequires TestRail 6.5.2+.\n\nArguments left at their defaults are omitted from the request\nbody. Passing an explicit ``None`` sends a JSON ``null``, which\nTestRail interprets as described below.\n\nArgs:\n    section_id: The ID of the section to move.\n    parent_id: New parent section ID. Pass ``None`` explicitly\n        to move the section to the top level (sent as JSON\n        ``null``). Omit to leave the parent unspecified.\n    after_id: ID of the section to place this section after.\n        Pass ``None`` explicitly to place it first (sent as\n        JSON ``null``). Omit to leave the position unspecified.\n\nReturns:\n    Dict containing the response data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> api.sections.move_section(\n    ...     section_id=10,\n    ...     parent_id=5,\n    ...     after_id=8\n    ... )\n    >>> # Move to top level, first position:\n    >>> api.sections.move_section(\n    ...     section_id=10, parent_id=None, after_id=None\n    ... )",
+        "http": {
+          "endpoint": "move_section/{section_id}",
+          "pathParams": [
+            "section_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "section_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "UNSET",
+            "name": "parent_id",
+            "required": false,
+            "type": "int | None | _UnsetType"
+          },
+          {
+            "default": "UNSET",
+            "name": "after_id",
+            "required": false,
+            "type": "int | None | _UnsetType"
+          }
+        ]
+      },
+      "update_section": {
+        "doc": "Update a section.\n\nArgs:\n    section_id: The ID of the section to update.\n    name: Optional new name for the section.\n    description: Optional new description for the section.\n    parent_id: Optional new parent section ID.\n\nReturns:\n    Dict containing the updated section data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> updated_section = api.sections.update_section(\n    ...     section_id=123,\n    ...     name=\"Updated Section Name\"\n    ... )",
+        "http": {
+          "endpoint": "update_section/{section_id}",
+          "pathParams": [
+            "section_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "section_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "name",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "description",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "parent_id",
+            "required": false,
+            "type": "int | None"
+          }
+        ]
+      }
+    }
+  },
+  "shared_steps": {
+    "description": "API for managing shared steps in TestRail. See [SharedStepsAPI](testrail_api_module/shared_steps.html) for details.",
+    "methods": {
+      "add_shared_step": {
+        "doc": "Add a new shared step to a project.\n\nArgs:\n    project_id: The ID of the project to add the shared step\n        to.\n    title: The title of the shared step.\n    custom_steps_separated: Optional list of step objects.\n        Each step is a dict with keys ``content``,\n        ``expected``, and optionally ``refs``.\n\nReturns:\n    Dict containing the created shared step data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "add_shared_step/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "title",
+            "required": true,
+            "type": "str"
+          },
+          {
+            "default": "None",
+            "name": "custom_steps_separated",
+            "required": false,
+            "type": "list[dict[str, Any]] | None"
+          }
+        ]
+      },
+      "delete_shared_step": {
+        "doc": "Delete a shared step.\n\nArgs:\n    shared_step_id: The ID of the shared step to delete.\n    keep_in_cases: Optional boolean. If ``True``, the steps\n        are kept in cases that reference this shared step\n        instead of being removed.\n\nReturns:\n    Empty dict (TestRail returns an empty body on success).\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "delete_shared_step/{shared_step_id}",
+          "pathParams": [
+            "shared_step_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "shared_step_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "keep_in_cases",
+            "required": false,
+            "type": "bool | None"
+          }
+        ]
+      },
+      "get_shared_step": {
+        "doc": "Get a shared step by ID.\n\nArgs:\n    shared_step_id: The ID of the shared step to retrieve.\n\nReturns:\n    Dict containing the shared step data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_shared_step/{shared_step_id}",
+          "pathParams": [
+            "shared_step_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "shared_step_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_shared_steps": {
+        "doc": "Get all shared steps for a project.\n\nArgs:\n    project_id: The ID of the project to get shared steps for.\n    created_after: Optional Unix timestamp to return only\n        shared steps created after this date.\n    created_before: Optional Unix timestamp to return only\n        shared steps created before this date.\n    created_by: Optional user ID or list of user IDs to filter\n        by the user who created the shared step.\n    limit: Optional maximum number of shared steps to return.\n    offset: Optional offset for pagination.\n    updated_after: Optional Unix timestamp to return only\n        shared steps updated after this date.\n    updated_before: Optional Unix timestamp to return only\n        shared steps updated before this date.\n\nReturns:\n    Dict containing the pagination envelope with keys\n    ``offset``, ``limit``, ``size``, ``_links``, and\n    ``shared_steps`` (the list of shared step dicts).\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_shared_steps/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "created_after",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "created_before",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "created_by",
+            "required": false,
+            "type": "int | list[int] | None"
+          },
+          {
+            "default": "None",
+            "name": "limit",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "offset",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "updated_after",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "updated_before",
+            "required": false,
+            "type": "int | None"
+          }
+        ]
+      },
+      "update_shared_step": {
+        "doc": "Update an existing shared step.\n\nArgs:\n    shared_step_id: The ID of the shared step to update.\n    title: Optional new title for the shared step.\n    custom_steps_separated: Optional updated list of step\n        objects. Each step is a dict with keys ``content``,\n        ``expected``, and optionally ``refs``.\n\nReturns:\n    Dict containing the updated shared step data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "update_shared_step/{shared_step_id}",
+          "pathParams": [
+            "shared_step_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "shared_step_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "title",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "custom_steps_separated",
+            "required": false,
+            "type": "list[dict[str, Any]] | None"
+          }
+        ]
+      }
+    }
+  },
+  "statuses": {
+    "description": "API for managing test statuses in TestRail. See [StatusesAPI](testrail_api_module/statuses.html) for details.",
+    "methods": {
+      "get_case_statuses": {
+        "doc": "Get all available case statuses.\n\nRequires TestRail Enterprise 7.3+.\n\nReturns:\n    List of dictionaries containing case status data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> case_statuses = api.statuses.get_case_statuses()",
+        "http": {
+          "endpoint": "get_case_statuses",
+          "pathParams": [],
+          "verb": "GET"
+        },
+        "params": []
+      },
+      "get_statuses": {
+        "doc": "Get all available test result statuses.\n\nReturns:\n    List of dictionaries containing status data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> statuses = api.statuses.get_statuses()",
+        "http": {
+          "endpoint": "get_statuses",
+          "pathParams": [],
+          "verb": "GET"
+        },
+        "params": []
+      }
+    }
+  },
+  "suites": {
+    "description": "API for managing test suites in TestRail. See [SuitesAPI](testrail_api_module/suites.html) for details.",
+    "methods": {
+      "add_suite": {
+        "doc": "Add a new test suite.\n\nArgs:\n    project_id: The ID of the project to add the suite to.\n    name: The name of the test suite.\n    description: Optional description of the test suite.\n\nReturns:\n    Dict containing the created test suite data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "add_suite/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "name",
+            "required": true,
+            "type": "str"
+          },
+          {
+            "default": "None",
+            "name": "description",
+            "required": false,
+            "type": "str | None"
+          }
+        ]
+      },
+      "delete_suite": {
+        "doc": "Delete a test suite.\n\nArgs:\n    suite_id: The ID of the test suite to delete.\n\nReturns:\n    Dict containing the response data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "delete_suite/{suite_id}",
+          "pathParams": [
+            "suite_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "suite_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_suite": {
+        "doc": "Get a test suite by ID.\n\nArgs:\n    suite_id: The ID of the test suite to retrieve.\n\nReturns:\n    Dict containing the test suite data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_suite/{suite_id}",
+          "pathParams": [
+            "suite_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "suite_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_suites": {
+        "doc": "Get all test suites for a project.\n\nArgs:\n    project_id: The ID of the project to get test suites\n        for.\n\nReturns:\n    List of dictionaries containing test suite data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_suites/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "update_suite": {
+        "doc": "Update a test suite.\n\nArgs:\n    suite_id: The ID of the test suite to update.\n    name: Optional new name for the test suite.\n    description: Optional description of the test suite.\n\nReturns:\n    Dict containing the updated test suite data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "update_suite/{suite_id}",
+          "pathParams": [
+            "suite_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "suite_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "name",
+            "required": false,
+            "type": "str | None"
+          },
+          {
+            "default": "None",
+            "name": "description",
+            "required": false,
+            "type": "str | None"
+          }
+        ]
+      }
+    }
+  },
+  "templates": {
+    "description": "API for managing test templates in TestRail. See [TemplatesAPI](testrail_api_module/templates.html) for details.",
+    "methods": {
+      "get_templates": {
+        "doc": "Get all templates for a project.\n\nArgs:\n    project_id: The ID of the project to get templates for.\n\nReturns:\n    List of dictionaries containing template data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_templates/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      }
+    }
+  },
+  "tests": {
+    "description": "API for managing tests in TestRail. See [TestsAPI](testrail_api_module/tests.html) for details.",
+    "methods": {
+      "get_test": {
+        "doc": "Get a test by ID.\n\nArgs:\n    test_id: The ID of the test to retrieve.\n    with_data: Optional parameter to include additional\n        data in the response.\n\nReturns:\n    Dict containing the test data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> test = api.tests.get_test(test_id=123)\n    >>> test = api.tests.get_test(\n    ...     test_id=123, with_data=1\n    ... )",
+        "http": {
+          "endpoint": "get_test/{test_id}",
+          "pathParams": [
+            "test_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "test_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "with_data",
+            "required": false,
+            "type": "int | None"
+          }
+        ]
+      },
+      "get_tests": {
+        "doc": "Get all tests for a test run.\n\nArgs:\n    run_id: The ID of the test run to get tests for.\n    assignedto_id: Optional user ID(s) to filter by assignee.\n    case_id: Optional case ID(s) to filter by.\n    limit: Optional limit on number of results\n        (default 250).\n    offset: Optional offset for pagination.\n    status_id: Optional status ID(s) to filter by.\n    with_data: Optional parameter to include additional\n        data in the response.\n\nReturns:\n    List of dictionaries containing test data.\n\nRaises:\n    TestRailAPIError: If the API request fails.\n\nExample:\n    >>> tests = api.tests.get_tests(run_id=1)\n    >>> tests = api.tests.get_tests(\n    ...     run_id=1,\n    ...     status_id=[1, 5],\n    ...     limit=100\n    ... )",
+        "http": {
+          "endpoint": "get_tests/{run_id}",
+          "pathParams": [
+            "run_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "run_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "assignedto_id",
+            "required": false,
+            "type": "int | list[int] | None"
+          },
+          {
+            "default": "None",
+            "name": "case_id",
+            "required": false,
+            "type": "int | list[int] | None"
+          },
+          {
+            "default": "None",
+            "name": "limit",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "offset",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "status_id",
+            "required": false,
+            "type": "int | list[int] | None"
+          },
+          {
+            "default": "None",
+            "name": "with_data",
+            "required": false,
+            "type": "int | None"
+          }
+        ]
+      }
+    }
+  },
+  "users": {
+    "description": "API for managing users in TestRail. See [UsersAPI](testrail_api_module/users.html) for details.",
+    "methods": {
+      "get_current_user": {
+        "doc": "Get the currently authenticated user.\n\nRequires TestRail 6.6+.\n\nReturns:\n    Dict containing the current user data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_current_user",
+          "pathParams": [],
+          "verb": "GET"
+        },
+        "params": []
+      },
+      "get_user": {
+        "doc": "Get a user by ID.\n\nArgs:\n    user_id: The ID of the user to retrieve.\n\nReturns:\n    Dict containing the user data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_user/{user_id}",
+          "pathParams": [
+            "user_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "user_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_user_by_email": {
+        "doc": "Get a user by email address.\n\nArgs:\n    email: The email address of the user to retrieve.\n\nReturns:\n    Dict containing the user data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_user_by_email",
+          "pathParams": [],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "email",
+            "required": true,
+            "type": "str"
+          }
+        ]
+      },
+      "get_users": {
+        "doc": "Get all users.\n\nArgs:\n    project_id: Optional ID of a project. Only users with explicit\n        access to the project are returned. Since TestRail 6.6,\n        non-administrators are required to provide a project_id\n        (administrators may omit it to list all users).\n\nReturns:\n    List of dictionaries containing user data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_users/{project_id}",
+          "optionalPathParams": [
+            "project_id"
+          ],
+          "pathParams": [],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "default": "None",
+            "name": "project_id",
+            "required": false,
+            "type": "int | None"
+          }
+        ]
+      }
+    }
+  },
+  "variables": {
+    "description": "API for managing variables in TestRail. See [VariablesAPI](testrail_api_module/variables.html) for details.",
+    "methods": {
+      "add_variable": {
+        "doc": "Add a new variable.\n\nArgs:\n    project_id: The ID of the project to add the variable\n        to.\n    name: The name of the variable.\n\nReturns:\n    Dict containing the created variable data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "add_variable/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "name",
+            "required": true,
+            "type": "str"
+          }
+        ]
+      },
+      "delete_variable": {
+        "doc": "Delete a variable.\n\nArgs:\n    variable_id: The ID of the variable to delete.\n\nReturns:\n    Dict containing the response data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "delete_variable/{variable_id}",
+          "pathParams": [
+            "variable_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "variable_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_variable": {
+        "doc": "Get a variable by ID.\n\nArgs:\n    variable_id: The ID of the variable to retrieve.\n\nReturns:\n    Dict containing the variable data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_variable/{variable_id}",
+          "pathParams": [
+            "variable_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "variable_id",
+            "required": true,
+            "type": "int"
+          }
+        ]
+      },
+      "get_variables": {
+        "doc": "Get all variables for a project.\n\nArgs:\n    project_id: The ID of the project to get variables for.\n    limit: Optional maximum number of variables to return.\n    offset: Optional number of variables to skip for\n        pagination.\n\nReturns:\n    List of dictionaries containing variable data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "get_variables/{project_id}",
+          "pathParams": [
+            "project_id"
+          ],
+          "verb": "GET"
+        },
+        "params": [
+          {
+            "name": "project_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "default": "None",
+            "name": "limit",
+            "required": false,
+            "type": "int | None"
+          },
+          {
+            "default": "None",
+            "name": "offset",
+            "required": false,
+            "type": "int | None"
+          }
+        ]
+      },
+      "update_variable": {
+        "doc": "Update a variable.\n\nArgs:\n    variable_id: The ID of the variable to update.\n    name: The new name for the variable.\n\nReturns:\n    Dict containing the updated variable data.\n\nRaises:\n    TestRailAPIError: If the API request fails.",
+        "http": {
+          "endpoint": "update_variable/{variable_id}",
+          "pathParams": [
+            "variable_id"
+          ],
+          "verb": "POST"
+        },
+        "params": [
+          {
+            "name": "variable_id",
+            "required": true,
+            "type": "int"
+          },
+          {
+            "name": "name",
+            "required": true,
+            "type": "str"
+          }
+        ]
+      }
+    }
+  }
+}
