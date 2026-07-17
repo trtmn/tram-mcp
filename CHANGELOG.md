@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.7.0](https://github.com/trtmn/tram-mcp/compare/v0.6.0...v0.7.0) (2026-07-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* the remote Cloudflare Worker / OAuth deployment is removed; tram-mcp is local stdio only.
+* the PyPI package `tram-mcp` is deprecated; install from npm (`npx tram-mcp`) or the Claude Desktop `.mcpb`.
+
+### ✨ Added
+
+* add Cloudflare Workers remote MCP server (TypeScript, OAuth 2.1) ([#50](https://github.com/trtmn/tram-mcp/issues/50)) ([cdbf6b4](https://github.com/trtmn/tram-mcp/commit/cdbf6b4765ab3fd41354aa9f8d672dab25a18943))
+* add local browser-login credential wizard and tram-mcp CLI ([#52](https://github.com/trtmn/tram-mcp/issues/52)) ([0ecd625](https://github.com/trtmn/tram-mcp/commit/0ecd625a65d2f4036fa474cdab518e20c26bbc24))
+* distribute as npm package (tram-mcp), drop the Python package ([#59](https://github.com/trtmn/tram-mcp/issues/59)) ([c1d3850](https://github.com/trtmn/tram-mcp/commit/c1d385044b72c3946492da50c619ac366978710d))
+
+
+### 🔧 Changed
+
+* remove the Cloudflare Worker and move the project to the repo root ([#60](https://github.com/trtmn/tram-mcp/issues/60)) ([ae46bfb](https://github.com/trtmn/tram-mcp/commit/ae46bfb7010dca5610c337db4a1a68b51de9c715))
+
+
+### 🔄 Maintenance
+
+* **deps:** bump fastmcp from 3.3.1 to 3.4.2 in the uv group ([d045a03](https://github.com/trtmn/tram-mcp/commit/d045a030e88183033a4e2e8db9b4d03c9c8cc20c))
+
 ## [0.6.0](https://github.com/trtmn/tram-mcp/compare/v0.5.6...v0.6.0) (2026-05-26)
 
 
