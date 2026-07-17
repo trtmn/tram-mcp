@@ -1,6 +1,6 @@
 # TestRail MCP Server
 
-[![CI](https://github.com/trtmn/tram-mcp/actions/workflows/cloudflare-ci.yml/badge.svg)](https://github.com/trtmn/tram-mcp/actions/workflows/cloudflare-ci.yml)
+[![CI](https://github.com/trtmn/tram-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/trtmn/tram-mcp/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/tram-mcp?label=npm)](https://www.npmjs.com/package/tram-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -8,10 +8,10 @@ Connect Claude to [TestRail](https://www.testrail.com/) — browse the API, sear
 test cases, and manage runs and results through natural language. Built on the
 [Model Context Protocol](https://modelcontextprotocol.io/).
 
-`tram-mcp` runs **locally over stdio** (this is what most people want) and also
-deploys as a **remote Cloudflare Worker**. Both share one TypeScript core. It's
-distributed as the npm package [`tram-mcp`](https://www.npmjs.com/package/tram-mcp)
-and as a Claude Desktop `.mcpb` bundle.
+`tram-mcp` runs **locally over stdio** — your MCP client spawns it as a child
+process. It's distributed as the npm package
+[`tram-mcp`](https://www.npmjs.com/package/tram-mcp) and as a Claude Desktop
+`.mcpb` bundle.
 
 > **Migrating from the old Python package?** `tram-mcp` is now a Node/npm package,
 > not a PyPI package. Use the install steps below; `uv tool install tram-mcp` /
@@ -99,22 +99,15 @@ form, or these environment variables (which take precedence):
 
 *Either `TESTRAIL_API_KEY` or `TESTRAIL_PASSWORD` must be set.
 
-## Remote deployment (Cloudflare Worker)
-
-The same core also runs as a remote OAuth-authenticated MCP server on Cloudflare Workers —
-useful for Claude.ai (web), which can't reach a local server. See
-[`cloudflare/README.md`](cloudflare/README.md) for deploy and self-host instructions.
-
 ## Development
 
-All source lives in [`cloudflare/`](cloudflare/) (one shared core, two transports).
+TypeScript; source in [`src/`](src/), tests in [`test/`](test/).
 
 ```bash
-cd cloudflare
 npm install
 npm run check       # tsc --noEmit
 npm test            # vitest
-npm run build:cli   # bundle the local CLI -> dist/cli.js
+npm run build:cli   # bundle the CLI -> dist/cli.js
 ```
 
 ## Releasing

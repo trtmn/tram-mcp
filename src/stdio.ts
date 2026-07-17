@@ -14,12 +14,7 @@ import { VERSION } from "./version";
  * `props: undefined` and lets env.ts resolve the TESTRAIL_* vars.
  */
 
-/**
- * Build the subset of Env the tools actually read — only the TESTRAIL_*
- * credential fields — from process.env. The Cloudflare-only bindings
- * (MCP_OBJECT, OAUTH_KV, OAUTH_PROVIDER) are never touched on the local
- * credential path, so a partial object cast to Env is safe here.
- */
+/** Build the Env the tools read (the TESTRAIL_* credential fields) from process.env. */
 export function envFromProcess(processEnv: NodeJS.ProcessEnv = process.env): Env {
   return {
     TESTRAIL_URL: processEnv.TESTRAIL_URL,

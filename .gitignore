@@ -12,9 +12,6 @@
 # Built artifacts (.mcpb bundles are built by CI on release; do not commit)
 *.mcpb
 
-# Node / TypeScript (cloudflare/)
-cloudflare/node_modules/
-cloudflare/dist/
-cloudflare/.wrangler/
-cloudflare/.dev.vars
-cloudflare/worker-configuration.d.ts
+# Node / TypeScript
+node_modules/
+dist/

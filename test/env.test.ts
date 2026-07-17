@@ -98,12 +98,12 @@ describe("configView", () => {
     expect(view.auth_method).toBe("api_key");
   });
 
-  it("labels the source 'worker secrets' when the OAuth provider is bound", () => {
-    const workerEnv = { ...FULL_ENV, OAUTH_PROVIDER: {} } as unknown as Env;
-    expect(configView(workerEnv).credential_source).toBe("worker secrets");
+  it("labels the credential source 'local' for env/credstore creds", () => {
+    expect(configView(FULL_ENV).credential_source).toBe("local (env or ~/.tram-mcp)");
   });
 
-  it("labels the source 'local' when there is no OAuth provider (stdio run)", () => {
-    expect(configView(FULL_ENV).credential_source).toBe("local (env or ~/.tram-mcp)");
+  it("labels the credential source 'per-client' when props are supplied", () => {
+    const view = configView({} as Env, { testrailUrl: "https://x", testrailUsername: "u", testrailApiKey: "k" });
+    expect(view.credential_source).toBe("per-client");
   });
 });

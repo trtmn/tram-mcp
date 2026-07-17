@@ -9,7 +9,7 @@
   "prerelease": false,
   "bootstrap-sha": "99a1e7a",
   "packages": {
-    "cloudflare": {
+    ".": {
       "package-name": "tram-mcp",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [

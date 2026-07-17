@@ -2,7 +2,6 @@ import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { createServer, type IncomingMessage } from "node:http";
 
-import { escapeHtml } from "./authorize";
 import { saveCredentials, type StoredCreds } from "./credstore";
 import type { ConnectionProps, Env } from "./env";
 import { getCredentials } from "./env";
@@ -16,6 +15,13 @@ import { VERSION } from "./version";
  * HTML mirrors the Worker's OAuth `/authorize` page minus the OAuth envelope —
  * here the "login" is purely entering TestRail details.
  */
+
+function escapeHtml(s: string): string {
+  return s.replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string,
+  );
+}
 
 const htmlHead = `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>Connect TestRail</title>

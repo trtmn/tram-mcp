@@ -14,8 +14,8 @@ export const SERVER_INSTRUCTIONS =
   "If a TestRail API call fails or you suspect credentials are wrong, " +
   "call check_testrail_auth first — it returns a structured diagnosis. " +
   "If it reports missing configuration, the connection is not authenticated — " +
-  "the user should provide TestRail credentials: remote servers show a login " +
-  "form when reconnecting, and the local server is set up with `tram-mcp login`. " +
+  "the user should provide TestRail credentials by running `tram-mcp login` " +
+  "(or setting the TESTRAIL_* environment variables). " +
   "Start with browse_testrail_api to discover available categories, " +
   "then describe_testrail_method to learn how to call a specific method, " +
   "then run_testrail_command to execute it. " +
@@ -35,11 +35,11 @@ const STATUS_IDS: Record<string, number> = {
 
 export interface ToolContext {
   env: Env;
-  /** Credentials from the OAuth grant (McpAgent.props), if any. */
+  /** Client-supplied credentials (e.g. from the login wizard), if any. */
   props?: ConnectionProps;
 }
 
-/** Effective per-connection credentials: the OAuth grant props (or Worker env). */
+/** Effective per-connection credentials: client props if supplied, else the env. */
 function effectiveProps(ctx: ToolContext): ConnectionProps | undefined {
   return ctx.props;
 }
@@ -111,7 +111,7 @@ function hintFor(status: number | null, message: string): string {
   if (/request failed|network|fetch/i.test(message)) {
     return (
       "Network error reaching TestRail. Check the TestRail URL is " +
-      "correct and reachable from Cloudflare's network."
+      "correct and reachable from this machine's network."
     );
   }
   return (
@@ -146,9 +146,9 @@ export function registerTools(server: McpServer, ctx: ToolContext): void {
           error: configError,
           error_class: "ConfigurationError",
           hint:
-            "Provide TestRail credentials (instance URL, username, and an API key " +
-            "or password): remote servers show a login form on reconnect; the " +
-            "local server is configured with `tram-mcp login`.",
+            "Run `tram-mcp login` to enter your TestRail URL, username, and API " +
+            "key (or password) in a browser, or set the TESTRAIL_* environment " +
+            "variables.",
           config,
         });
       }

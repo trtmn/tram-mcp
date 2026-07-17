@@ -33,7 +33,7 @@ describe("startWizardServer", () => {
     // The test drives the loopback server with real fetch; only TestRail's API
     // (the server's validation call) is stubbed to succeed.
     const realFetch = globalThis.fetch;
-    vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
+    vi.stubGlobal("fetch", async (input: string | URL | Request, init?: RequestInit) => {
       const target = typeof input === "string" ? input : input.toString();
       if (target.includes("127.0.0.1")) return realFetch(input, init);
       return new Response(JSON.stringify([]), { status: 200 });

@@ -23,7 +23,7 @@ afterEach(() => {
 
 /** Stub fetch: pass loopback calls through, answer TestRail with `status`. */
 function stubTestRail(status: number) {
-  vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
+  vi.stubGlobal("fetch", async (input: string | URL | Request, init?: RequestInit) => {
     const target = typeof input === "string" ? input : input.toString();
     if (target.includes("127.0.0.1")) return realFetch(input, init);
     return new Response(JSON.stringify(status === 200 ? [{ id: 1 }] : "no"), { status });
