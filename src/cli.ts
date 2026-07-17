@@ -1,4 +1,5 @@
-import { pathToFileURL } from "node:url";
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 import { clearCredentials } from "./credstore";
 import { configView } from "./env";
@@ -59,10 +60,25 @@ export async function runCli(argv: string[]): Promise<void> {
   process.exitCode = result;
 }
 
-// Run only when executed directly (node dist/cli.js), not when imported by tests.
-const invokedDirectly =
-  !!process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
-if (invokedDirectly) {
+// True when this module is the process entry point. process.argv[1] is resolved
+// through symlinks because npm/npx expose the bin as a symlink
+// (node_modules/.bin/tram-mcp -> dist/cli.js); comparing the raw symlink path
+// against metaUrl (already real) would wrongly report "not main" and the CLI
+// would silently no-op under `npx tram-mcp`. `resolve` is injectable for tests.
+export function isEntrypoint(
+  argv1: string | undefined,
+  metaUrl: string,
+  resolve: (p: string) => string = realpathSync,
+): boolean {
+  if (!argv1) return false;
+  try {
+    return fileURLToPath(metaUrl) === resolve(argv1);
+  } catch {
+    return false;
+  }
+}
+
+if (isEntrypoint(process.argv[1], import.meta.url)) {
   runCli(process.argv.slice(2)).catch((err) => {
     console.error(err instanceof Error ? err.message : String(err));
     process.exit(1);
