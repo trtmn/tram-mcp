@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/trtmn/tram-mcp/compare/v0.7.0...v0.7.1) (2026-07-17)
+
+
+### 🐛 Fixed
+
+* run the CLI when invoked via a bin symlink ([#62](https://github.com/trtmn/tram-mcp/issues/62)) ([968b1e4](https://github.com/trtmn/tram-mcp/commit/968b1e465964571aa94674421303bf554e236b6c))
+
 ## [0.7.0](https://github.com/trtmn/tram-mcp/compare/v0.6.0...v0.7.0) (2026-07-17)
 
 
