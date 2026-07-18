@@ -1,6 +1,6 @@
 {
   "name": "tram-mcp",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "TestRail MCP server — browse the API, search test cases, and manage runs and results. Runs locally over stdio.",
   "license": "MIT",
   "author": "Matt Troutman",
@@ -37,7 +37,7 @@
     "check": "tsc --noEmit",
     "test": "vitest run",
     "catalog": "python3 scripts/generate_catalog.py",
-    "build:cli": "esbuild src/cli.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/cli.js --banner:js='#!/usr/bin/env node'",
+    "build:cli": "node scripts/build.mjs",
     "prepublishOnly": "npm run build:cli"
   },
   "dependencies": {

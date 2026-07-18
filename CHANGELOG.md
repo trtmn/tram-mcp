@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.7.2](https://github.com/trtmn/tram-mcp/compare/v0.7.1...v0.7.2) (2026-07-18)
+
+
+### 🐛 Fixed
+
+* make the CLI build work on Windows (drive esbuild via its JS API) ([#66](https://github.com/trtmn/tram-mcp/issues/66)) ([e86d410](https://github.com/trtmn/tram-mcp/commit/e86d41017be6fa2e22457d90297ce66994bb0be9))
+* report the real package version instead of hardcoded 0.1.0 ([#65](https://github.com/trtmn/tram-mcp/issues/65)) ([cf463dd](https://github.com/trtmn/tram-mcp/commit/cf463dd83333ca817a703c54de1f5b0ece36189d))
+
+
+### 🔄 Maintenance
+
+* run the test suite on Windows and macOS as well as Linux ([#68](https://github.com/trtmn/tram-mcp/issues/68)) ([f15b4a6](https://github.com/trtmn/tram-mcp/commit/f15b4a6ed106b8ed377377c2df9c0733cdbbe034))
+
 ## [0.7.1](https://github.com/trtmn/tram-mcp/compare/v0.7.0...v0.7.1) (2026-07-17)
 
 
