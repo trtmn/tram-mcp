@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.3](https://github.com/trtmn/tram-mcp/compare/v0.7.2...v0.7.3) (2026-07-18)
+
+
+### 🔄 Maintenance
+
+* author release-please PRs with a PAT to drop the CI approval gate ([#70](https://github.com/trtmn/tram-mcp/issues/70)) ([b7856aa](https://github.com/trtmn/tram-mcp/commit/b7856aa31f3bdb19e57144e2e57cf8b7f9c8ca54))
+
 ## [0.7.2](https://github.com/trtmn/tram-mcp/compare/v0.7.1...v0.7.2) (2026-07-18)
 
 
