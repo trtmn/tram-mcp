@@ -42,12 +42,18 @@ describe("credstore", () => {
     expect(loadCredentials()).toBeNull();
   });
 
-  it("writes the file with 0600 permissions", async () => {
-    const { saveCredentials, credentialsPath } = await fresh();
-    saveCredentials({ url: "x", username: "y", auth_method: "password", secret: "z" });
-    const mode = statSync(credentialsPath()).mode & 0o777;
-    expect(mode).toBe(0o600);
-  });
+  // POSIX-only: Windows has no Unix permission bits (files report 0o666), so the
+  // 0o600 mode passed to writeFileSync is a no-op there. On Windows, credential
+  // confidentiality relies on the user-profile ACLs, the same as .env / gh / aws.
+  it.skipIf(process.platform === "win32")(
+    "writes the file with 0600 permissions",
+    async () => {
+      const { saveCredentials, credentialsPath } = await fresh();
+      saveCredentials({ url: "x", username: "y", auth_method: "password", secret: "z" });
+      const mode = statSync(credentialsPath()).mode & 0o777;
+      expect(mode).toBe(0o600);
+    },
+  );
 
   it("clearCredentials removes the file and is idempotent", async () => {
     const { saveCredentials, clearCredentials, loadCredentials } = await fresh();

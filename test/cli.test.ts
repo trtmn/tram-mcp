@@ -1,5 +1,5 @@
 import { mkdtempSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -20,8 +20,14 @@ async function fresh() {
 }
 
 describe("isEntrypoint", () => {
-  const meta = "file:///abs/pkg/dist/cli.js";
-  const real = fileURLToPath(meta); // /abs/pkg/dist/cli.js
+  // Build a platform-valid absolute file URL. Windows file URLs require a drive
+  // letter, so a hardcoded POSIX "file:///abs/..." string can't be parsed by
+  // fileURLToPath there — derive both the URL and its path form from a real
+  // absolute path so they round-trip on every platform.
+  const seed =
+    process.platform === "win32" ? "C:\\abs\\pkg\\dist\\cli.js" : "/abs/pkg/dist/cli.js";
+  const meta = pathToFileURL(seed).href;
+  const real = fileURLToPath(meta); // e.g. /abs/pkg/dist/cli.js or C:\abs\pkg\dist\cli.js
 
   it("true when run directly (argv1 is the real path)", () => {
     expect(isEntrypoint(real, meta, (p) => p)).toBe(true);
