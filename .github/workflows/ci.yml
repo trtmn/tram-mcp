@@ -14,8 +14,14 @@ permissions:
 
 jobs:
   test:
-    name: Type-check & test
-    runs-on: ubuntu-latest
+    name: Type-check & test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # Run every OS to completion even if one fails, so a single-platform
+      # regression doesn't mask the others.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
 
