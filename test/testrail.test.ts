@@ -45,6 +45,17 @@ describe("buildUrl", () => {
     const url = client().buildUrl("get_cases/1", { priority_id: [1, 2, 3] });
     expect(url).toContain("priority_id=1%2C2%2C3");
   });
+
+  it("serializes booleans as 1/0 (TestRail filter convention), not true/false", () => {
+    const url = client().buildUrl("get_runs/1", {
+      is_completed: true,
+      draft: false,
+    });
+    expect(url).toContain("is_completed=1");
+    expect(url).toContain("draft=0");
+    expect(url).not.toContain("true");
+    expect(url).not.toContain("false");
+  });
 });
 
 describe("request handling", () => {
@@ -166,5 +177,95 @@ describe("request handling", () => {
     const [, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
     expect(init.method).toBe("POST");
     expect(JSON.parse(init.body as string)).toEqual({ name: "Run" });
+  });
+
+  it("does NOT retry a POST on 5xx (avoids duplicating an applied write)", async () => {
+    vi.useFakeTimers();
+    const fn = vi.fn(async () => new Response("", { status: 503 }));
+    vi.stubGlobal("fetch", fn);
+    const promise = client()
+      .post("add_result_for_case/1/2", { status_id: 1 })
+      .catch((e: unknown) => e);
+    await vi.runAllTimersAsync();
+    const err = (await promise) as TestRailError;
+    expect(fn).toHaveBeenCalledTimes(1); // no retries
+    expect(err.status).toBe(503);
+  });
+
+  it("still retries a POST on 429 (request was rejected, not applied)", async () => {
+    vi.useFakeTimers();
+    let calls = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        calls += 1;
+        return calls === 1
+          ? new Response("", { status: 429 })
+          : new Response(JSON.stringify({ id: 7 }), { status: 200 });
+      }),
+    );
+    const promise = client().post("add_run/1", { name: "R" });
+    await vi.runAllTimersAsync();
+    expect(await promise).toEqual({ id: 7 });
+    expect(calls).toBe(2);
+  });
+});
+
+describe("getPaginated", () => {
+  // Build one page of TestRail's bulk-list envelope shape.
+  function page(items: unknown[], next: string | null, key = "cases") {
+    return JSON.stringify({
+      offset: 0,
+      limit: 250,
+      size: items.length,
+      _links: { next, prev: null },
+      [key]: items,
+    });
+  }
+
+  it("follows _links.next and flattens every page into one array", async () => {
+    const calls: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        calls.push(url);
+        if (url.includes("offset=250")) {
+          return new Response(page([{ id: 3 }], null));
+        }
+        return new Response(
+          page([{ id: 1 }, { id: 2 }], "/api/v2/get_cases/1&limit=250&offset=250"),
+        );
+      }),
+    );
+    const result = await client().getPaginated("get_cases/1");
+    expect(result).toEqual([{ id: 1 }, { id: 2 }, { id: 3 }]);
+    // Second request targets the instance-relative next link, /api/v2/ stripped.
+    expect(calls[1]).toBe(
+      "https://example.testrail.io/index.php?/api/v2/get_cases/1&limit=250&offset=250",
+    );
+  });
+
+  it("returns a bare array response unchanged (older TestRail / no envelope)", async () => {
+    mockFetchOnce(200, JSON.stringify([{ id: 1 }, { id: 2 }]));
+    expect(await client().getPaginated("get_priorities")).toEqual([
+      { id: 1 },
+      { id: 2 },
+    ]);
+  });
+
+  it("passes a single-entity response through untouched", async () => {
+    mockFetchOnce(200, JSON.stringify({ id: 5, name: "Run", url: "u" }));
+    expect(await client().getPaginated("get_run/5")).toEqual({
+      id: 5,
+      name: "Run",
+      url: "u",
+    });
+  });
+
+  it("stops at a single page when _links.next is null", async () => {
+    const fn = vi.fn(async () => new Response(page([{ id: 1 }], null)));
+    vi.stubGlobal("fetch", fn);
+    expect(await client().getPaginated("get_cases/1")).toEqual([{ id: 1 }]);
+    expect(fn).toHaveBeenCalledTimes(1);
   });
 });

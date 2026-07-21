@@ -25,6 +25,16 @@ jobs:
         id: release
         uses: googleapis/release-please-action@v5
         with:
+          # PRs opened with the default GITHUB_TOKEN are authored by
+          # github-actions[bot], and GitHub holds their pull_request CI runs as
+          # "action_required" (manual approval) on every release. Authoring the
+          # release PR with a PAT (or GitHub App token) from a write-access
+          # identity makes CI run automatically and removes that gate. Add the
+          # PAT as the RELEASE_PLEASE_TOKEN repo secret (fine-grained: Contents
+          # + Pull requests: read/write on this repo). Until it exists this
+          # falls back to GITHUB_TOKEN, so releases keep working unchanged (just
+          # with the approval prompt).
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
           target-branch: development
           config-file: .github/release-please-config.json
           manifest-file: .github/.release-please-manifest.json
