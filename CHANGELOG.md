@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.4](https://github.com/trtmn/tram-mcp/compare/v0.7.3...v0.7.4) (2026-07-21)
+
+
+### 🐛 Fixed
+
+* follow TestRail pagination and correct query/retry handling ([#75](https://github.com/trtmn/tram-mcp/issues/75)) ([e095b3f](https://github.com/trtmn/tram-mcp/commit/e095b3fa58992b84fa816984046f493561b8f61f))
+
+
+### 🔄 Maintenance
+
+* **deps:** bump the actions group with 2 updates ([#74](https://github.com/trtmn/tram-mcp/issues/74)) ([9f2b52e](https://github.com/trtmn/tram-mcp/commit/9f2b52ed8df8750af9f384cf137f730c36457882))
+
 ## [0.7.3](https://github.com/trtmn/tram-mcp/compare/v0.7.2...v0.7.3) (2026-07-18)
 
 
