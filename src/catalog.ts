@@ -149,7 +149,11 @@ export async function dispatchMethod(
   }
 
   if (http.verb === "GET") {
-    return client.get(endpoint, { ...rest, ...extra });
+    // getPaginated follows TestRail's `_links.next` and flattens bulk-list
+    // envelopes to a single array (single-entity GETs pass through unchanged),
+    // so run_testrail_command's fields/max_results/truncated logic operates on
+    // the complete result set instead of a silently-capped first page.
+    return client.getPaginated(endpoint, { ...rest, ...extra });
   }
   return client.post(
     endpoint,

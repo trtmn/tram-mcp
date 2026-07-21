@@ -15,6 +15,12 @@ function fakeClient() {
       calls.push({ verb: "GET", endpoint, query });
       return { ok: true };
     },
+    // dispatchMethod routes GET through getPaginated (auto-pagination); it
+    // behaves like get for these dispatch-shape assertions.
+    getPaginated: async (endpoint: string, query?: unknown) => {
+      calls.push({ verb: "GET", endpoint, query });
+      return { ok: true };
+    },
     post: async (endpoint: string, body?: unknown, query?: unknown) => {
       calls.push({ verb: "POST", endpoint, body, query });
       return { ok: true };

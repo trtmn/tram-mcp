@@ -341,9 +341,10 @@ export function registerTools(server: McpServer, ctx: ToolContext): void {
     },
     async ({ project_id, query, suite_id }) => {
       try {
-        const response = await getClient(ctx).get(`get_cases/${project_id}`, {
-          suite_id,
-        });
+        const response = await getClient(ctx).getPaginated(
+          `get_cases/${project_id}`,
+          { suite_id },
+        );
         const allCases: unknown[] = Array.isArray(response)
           ? response
           : ((response as Record<string, unknown>)?.cases as unknown[]) ?? [];
@@ -384,7 +385,7 @@ export function registerTools(server: McpServer, ctx: ToolContext): void {
     },
     async ({ name, include_completed }) => {
       try {
-        const response = await getClient(ctx).get("get_projects");
+        const response = await getClient(ctx).getPaginated("get_projects");
         const all: unknown[] = Array.isArray(response)
           ? response
           : ((response as Record<string, unknown>)?.projects as unknown[]) ?? [];
@@ -457,7 +458,7 @@ export function registerTools(server: McpServer, ctx: ToolContext): void {
           // call fails, keep the valid summary and report the enrichment error
           // alongside it rather than discarding the run data the caller wanted.
           try {
-            const response = await client.get(`get_tests/${run_id}`, {
+            const response = await client.getPaginated(`get_tests/${run_id}`, {
               status_id: STATUS_IDS.failed,
             });
             const tests: unknown[] = Array.isArray(response)

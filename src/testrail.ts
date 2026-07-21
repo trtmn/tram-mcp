@@ -14,17 +14,57 @@ export class TestRailError extends Error {
   }
 }
 
-const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504]);
+// 5xx are retried only for idempotent GETs. For POST a 5xx may arrive AFTER
+// TestRail already applied the write (e.g. a proxy 502/503 on the response leg),
+// so retrying would duplicate results/comments/runs — retry POST on 429 only,
+// where TestRail rejected the request before applying it.
+const GET_RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504]);
+const POST_RETRYABLE_STATUSES = new Set([429]);
 const MAX_RETRIES = 3;
+
+// Safety cap on pagination follow-through: 200 pages * 250 items = 50,000 items.
+// Well beyond any realistic single query; prevents a runaway loop.
+const MAX_PAGES = 200;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** Serialize a query value the way the TestRail API expects (arrays comma-joined). */
+/** Serialize a query value the way the TestRail API expects. */
 function queryValue(value: unknown): string {
-  if (Array.isArray(value)) return value.map(String).join(",");
+  if (Array.isArray(value)) return value.map(queryValue).join(",");
+  // TestRail's boolean filters (e.g. is_completed) expect 1/0, not "true"/"false";
+  // sending the words silently disables the filter.
+  if (typeof value === "boolean") return value ? "1" : "0";
   return String(value);
+}
+
+/**
+ * The list field of a TestRail bulk-response envelope (the sole array-valued
+ * key besides `_links`), or null when there isn't one.
+ */
+function listKeyOf(obj: Record<string, unknown>): string | null {
+  for (const [k, v] of Object.entries(obj)) {
+    if (k === "_links") continue;
+    if (Array.isArray(v)) return k;
+  }
+  return null;
+}
+
+/**
+ * A TestRail bulk-list pagination envelope: `{ offset, limit, size, _links, <list> }`.
+ * TestRail caps each page at 250 items and links the next page via `_links.next`.
+ * Single-entity GETs (get_run/{id}) lack this shape, so they pass through untouched.
+ */
+function isPaginationEnvelope(value: Json): value is Record<string, unknown> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  const obj = value as Record<string, unknown>;
+  return (
+    "offset" in obj &&
+    typeof obj._links === "object" &&
+    obj._links !== null &&
+    listKeyOf(obj) !== null
+  );
 }
 
 export class TestRailClient {
@@ -54,6 +94,8 @@ export class TestRailClient {
       Authorization: `Basic ${btoa(`${this.creds.username}:${this.creds.secret}`)}`,
     };
 
+    const retryable =
+      method === "GET" ? GET_RETRYABLE_STATUSES : POST_RETRYABLE_STATUSES;
     let response: Response | null = null;
     let lastNetworkError: Error | null = null;
     let attempts = 0;
@@ -79,7 +121,7 @@ export class TestRailClient {
         response = null;
         continue;
       }
-      if (!RETRYABLE_STATUSES.has(response.status)) break;
+      if (!retryable.has(response.status)) break;
     }
 
     if (!response) {
@@ -147,6 +189,39 @@ export class TestRailClient {
 
   get(endpoint: string, params?: QueryParams): Promise<Json> {
     return this.request("GET", endpoint, { params });
+  }
+
+  /**
+   * GET an endpoint, transparently following TestRail's pagination.
+   *
+   * TestRail caps bulk-list responses at 250 items and returns an envelope
+   * (`{ offset, limit, size, _links, <list> }`) rather than a bare array;
+   * fetching only the first page silently drops every item past #250. This
+   * follows `_links.next` until exhausted and returns the FULL list as a single
+   * flat array. Non-paginated responses (bare arrays, single entities) are
+   * returned unchanged, so this is a safe drop-in for `get` on any endpoint.
+   */
+  async getPaginated(endpoint: string, params?: QueryParams): Promise<Json> {
+    const first = await this.get(endpoint, params);
+    if (!isPaginationEnvelope(first)) return first;
+
+    const key = listKeyOf(first) as string;
+    const items: unknown[] = [...(first[key] as unknown[])];
+    let next = (first._links as { next?: string | null }).next ?? null;
+    let pages = 1;
+    while (next && pages < MAX_PAGES) {
+      // `_links.next` is instance-relative (".../api/v2/get_cases/1&limit=250&
+      // offset=250") and already carries its own query string, so strip the
+      // leading "/api/v2/" and pass no extra params.
+      const nextEndpoint = next.replace(/^\/api\/v2\//, "");
+      const page = await this.get(nextEndpoint);
+      if (!isPaginationEnvelope(page)) break;
+      const pageKey = listKeyOf(page) ?? key;
+      items.push(...((page[pageKey] as unknown[]) ?? []));
+      next = (page._links as { next?: string | null }).next ?? null;
+      pages++;
+    }
+    return items;
   }
 
   post(endpoint: string, body?: Json, params?: QueryParams): Promise<Json> {
