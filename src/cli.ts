@@ -1,6 +1,3 @@
-import { realpathSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-
 import { clearCredentials } from "./credstore";
 import { configView } from "./env";
 import { main as runStdioServer, resolveLocalEnv } from "./stdio";
@@ -8,8 +5,13 @@ import { VERSION } from "./version";
 import { runWizard } from "./wizard";
 
 /**
- * CLI entry for the local package. With no subcommand it runs the stdio MCP
+ * CLI logic for the local package. With no subcommand it runs the stdio MCP
  * server (what the MCP client spawns); the subcommands manage credentials.
+ *
+ * This module is deliberately side-effect-free — it never runs the CLI on
+ * import. The executable entry is bin.ts, which calls runCli() unconditionally.
+ * Keeping the two separate avoids the fragile "am I the entry point?" path
+ * comparison that used to silently no-op on Windows.
  */
 
 const USAGE = `tram-mcp v${VERSION}
@@ -58,29 +60,4 @@ export async function runCli(argv: string[]): Promise<void> {
     return;
   }
   process.exitCode = result;
-}
-
-// True when this module is the process entry point. process.argv[1] is resolved
-// through symlinks because npm/npx expose the bin as a symlink
-// (node_modules/.bin/tram-mcp -> dist/cli.js); comparing the raw symlink path
-// against metaUrl (already real) would wrongly report "not main" and the CLI
-// would silently no-op under `npx tram-mcp`. `resolve` is injectable for tests.
-export function isEntrypoint(
-  argv1: string | undefined,
-  metaUrl: string,
-  resolve: (p: string) => string = realpathSync,
-): boolean {
-  if (!argv1) return false;
-  try {
-    return fileURLToPath(metaUrl) === resolve(argv1);
-  } catch {
-    return false;
-  }
-}
-
-if (isEntrypoint(process.argv[1], import.meta.url)) {
-  runCli(process.argv.slice(2)).catch((err) => {
-    console.error(err instanceof Error ? err.message : String(err));
-    process.exit(1);
-  });
 }
