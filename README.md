@@ -85,6 +85,21 @@ supply credentials via the `TESTRAIL_*` env vars, e.g. `~/.cursor/mcp.json`:
 }
 ```
 
+> **Windows:** many MCP clients spawn the command without a shell, and Windows
+> can't execute `npx` (really `npx.cmd`) that way — the server fails to start.
+> Wrap it in `cmd /c`:
+>
+> ```json
+> {
+>   "mcpServers": {
+>     "tram-mcp": {
+>       "command": "cmd",
+>       "args": ["/c", "npx", "-y", "tram-mcp"]
+>     }
+>   }
+> }
+> ```
+
 ## Configuration
 
 Credentials come from `npx tram-mcp login` (saved to `~/.tram-mcp/`), the Desktop install
