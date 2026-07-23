@@ -14,8 +14,9 @@ export const SERVER_INSTRUCTIONS =
   "If a TestRail API call fails or you suspect credentials are wrong, " +
   "call check_testrail_auth first — it returns a structured diagnosis. " +
   "If it reports missing configuration, the connection is not authenticated — " +
-  "the user should provide TestRail credentials by running `tram-mcp login` " +
-  "(or setting the TESTRAIL_* environment variables). " +
+  "call the `testrail_login` tool to have the user enter TestRail credentials " +
+  "in a browser (or, outside a session, run `tram-mcp login` / set the " +
+  "TESTRAIL_* environment variables), then retry. " +
   "Start with browse_testrail_api to discover available categories, " +
   "then describe_testrail_method to learn how to call a specific method, " +
   "then run_testrail_command to execute it. " +
@@ -37,6 +38,23 @@ export interface ToolContext {
   env: Env;
   /** Client-supplied credentials (e.g. from the login wizard), if any. */
   props?: ConnectionProps;
+  /**
+   * Optional dynamic credential source. When present it is consulted on every
+   * tool call, so credentials saved mid-session (e.g. by the login tool) are
+   * picked up without restarting the server. Falls back to the static `env`.
+   */
+  resolveEnv?: () => Env;
+  /**
+   * Optional login capability. When present, the `testrail_login` tool is
+   * registered; calling it starts a browser login and returns the URL. Only
+   * transports that can drive a local browser (stdio) supply this.
+   */
+  startLogin?: () => Promise<{ url: string }>;
+}
+
+/** The credentials env for this call: the dynamic resolver if set, else static. */
+function currentEnv(ctx: ToolContext): Env {
+  return ctx.resolveEnv ? ctx.resolveEnv() : ctx.env;
 }
 
 /** Effective per-connection credentials: client props if supplied, else the env. */
@@ -76,7 +94,7 @@ function errorMessage(err: unknown): string {
 }
 
 function getClient(ctx: ToolContext): TestRailClient {
-  return new TestRailClient(getCredentials(ctx.env, effectiveProps(ctx)));
+  return new TestRailClient(getCredentials(currentEnv(ctx), effectiveProps(ctx)));
 }
 
 function hintFor(status: number | null, message: string): string {
@@ -138,17 +156,17 @@ export function registerTools(server: McpServer, ctx: ToolContext): void {
     },
     async () => {
       const props = effectiveProps(ctx);
-      const config = configView(ctx.env, props);
-      const configError = checkConfig(ctx.env, props);
+      const config = configView(currentEnv(ctx), props);
+      const configError = checkConfig(currentEnv(ctx), props);
       if (configError) {
         return jsonResult({
           ok: false,
           error: configError,
           error_class: "ConfigurationError",
           hint:
-            "Run `tram-mcp login` to enter your TestRail URL, username, and API " +
-            "key (or password) in a browser, or set the TESTRAIL_* environment " +
-            "variables.",
+            "Call the `testrail_login` tool to enter your TestRail URL, username, " +
+            "and API key (or password) in a browser — or run `tram-mcp login` / " +
+            "set the TESTRAIL_* environment variables.",
           config,
         });
       }
@@ -176,6 +194,42 @@ export function registerTools(server: McpServer, ctx: ToolContext): void {
       }
     },
   );
+
+  if (ctx.startLogin) {
+    server.registerTool(
+      "testrail_login",
+      {
+        title: "Log in to TestRail",
+        description:
+          "Open a browser window to enter and save TestRail credentials (URL, " +
+          "username, and API key or password). Use this when credentials are " +
+          "missing or rejected — e.g. check_testrail_auth reports missing " +
+          "configuration, or a call returns 401/403. Returns immediately with a " +
+          "login URL; the browser form opens automatically (open the URL manually " +
+          "if it doesn't). Tell the user to complete the form, then retry their " +
+          "original request — credentials are saved locally to ~/.tram-mcp and " +
+          "picked up on the next call.",
+        inputSchema: {},
+        annotations: { readOnlyHint: false, openWorldHint: true },
+      },
+      async () => {
+        try {
+          const { url } = await ctx.startLogin!();
+          return jsonResult({
+            status: "login_started",
+            url,
+            message:
+              "A browser window should have opened to the TestRail login form. " +
+              `If not, open this URL manually: ${url} . Enter your TestRail URL, ` +
+              "username, and API key (or password), submit, then retry your " +
+              "original request. Credentials are saved locally to ~/.tram-mcp.",
+          });
+        } catch (err) {
+          return errorResult(errorMessage(err));
+        }
+      },
+    );
+  }
 
   server.registerTool(
     "browse_testrail_api",

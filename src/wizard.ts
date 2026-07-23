@@ -243,6 +243,66 @@ export async function startWizardServer(
   return { url, done, close: () => server.close() };
 }
 
+// A single in-flight non-blocking login session (see beginLogin). Tracked at
+// module scope so a second beginLogin supersedes the first and so it can be
+// cancelled (on shutdown, or in tests).
+let activeLogin: { close(): void } | null = null;
+
+/**
+ * Close the active non-blocking login session, if any. Returns true when a
+ * session was open (and is now closed), false when there was nothing to cancel.
+ */
+export function cancelPendingLogin(): boolean {
+  if (!activeLogin) return false;
+  activeLogin.close();
+  return true;
+}
+
+/**
+ * Start a login without blocking: spin up the loopback wizard, open the browser,
+ * and return the URL immediately. Unlike runWizard (which the `tram-mcp login`
+ * CLI uses and awaits), this is what the `testrail_login` MCP tool calls — it
+ * can't block a tool call for minutes while the user fills the form. The wizard
+ * stays up in the background until the user submits, the timeout elapses, or a
+ * newer login supersedes it. Credentials save to the credential store, and the
+ * server picks them up on the next tool call (see resolveEnv in stdio.ts).
+ */
+export async function beginLogin(
+  opts: {
+    open?: (url: string) => void;
+    timeoutMs?: number;
+    save?: (c: StoredCreds) => void;
+  } = {},
+): Promise<{ url: string }> {
+  const open = opts.open ?? openBrowser;
+  const timeoutMs = opts.timeoutMs ?? 5 * 60_000;
+  // At most one active session: supersede any prior pending login.
+  cancelPendingLogin();
+  const server = await startWizardServer(opts.save ? { save: opts.save } : {});
+  let timer: NodeJS.Timeout | undefined;
+  const session = {
+    close() {
+      if (timer) {
+        clearTimeout(timer);
+        timer = undefined;
+      }
+      if (activeLogin === session) activeLogin = null;
+      server.close();
+    },
+  };
+  activeLogin = session;
+  timer = setTimeout(() => session.close(), timeoutMs);
+  // Don't let the timer alone keep the process alive.
+  timer.unref?.();
+  // Close on a successful submit (done resolves) or a server error (rejects).
+  server.done.then(
+    () => session.close(),
+    () => session.close(),
+  );
+  open(server.url);
+  return { url: server.url };
+}
+
 /**
  * Run the interactive login: open the browser to the credential form and wait
  * (up to `timeoutMs`) for a successful submission, then shut the server down.
