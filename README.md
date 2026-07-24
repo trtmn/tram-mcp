@@ -24,24 +24,30 @@ process. It's distributed as the npm package
 
 ## Add to Claude Code
 
-Run these two commands (a coworker — or Claude Code itself — can follow them verbatim):
+Register the server (a coworker — or Claude Code itself — can run this verbatim):
 
 ```bash
 claude mcp add tram-mcp -- npx -y tram-mcp
-npx tram-mcp login
 ```
 
-1. The first command registers the server (Claude Code spawns `npx -y tram-mcp` over stdio).
-2. `npx tram-mcp login` opens a browser form — enter your TestRail **URL**, **username**,
-   and **API key** (My Settings → API Keys in TestRail). Credentials are validated against
-   TestRail and saved to `~/.tram-mcp/credentials.json` (readable only by you).
+That's it — Claude Code spawns `npx -y tram-mcp` over stdio. Start a session and run
+`/mcp`; you should see **tram-mcp** with its tools.
 
-Then start a Claude Code session and run `/mcp` — you should see **tram-mcp** with its tools.
+**Logging in — no terminal needed.** The first time you ask Claude to do anything in
+TestRail without credentials configured, it calls the **`testrail_login`** tool, which
+opens a browser form. Enter your TestRail **URL**, **username**, and **API key** (My
+Settings → API Keys in TestRail), submit, and retry your request — the server picks up the
+new credentials on the next call, no restart required. They're validated against TestRail
+and saved to `~/.tram-mcp/credentials.json` (readable only by you). You can trigger it
+anytime by asking Claude to *"log in to TestRail."*
+
+**Prefer the terminal?** Run `npx tram-mcp login` for the same browser form before starting
+Claude (see [Configuration](#configuration) for the env-var alternative).
 
 **Prefer to hand it to Claude Code as a prompt?** Paste this:
 
-> Add the TestRail MCP server: run `claude mcp add tram-mcp -- npx -y tram-mcp`, then run
-> `npx tram-mcp login` so I can enter my TestRail credentials in the browser.
+> Add the TestRail MCP server: run `claude mcp add tram-mcp -- npx -y tram-mcp`, then use
+> the `testrail_login` tool so I can enter my TestRail credentials in the browser.
 
 **Prefer environment variables** (CI, or to skip the browser form)? Set `TESTRAIL_URL`,
 `TESTRAIL_USERNAME`, and `TESTRAIL_API_KEY` (or `TESTRAIL_PASSWORD`) — they take precedence
@@ -102,8 +108,9 @@ supply credentials via the `TESTRAIL_*` env vars, e.g. `~/.cursor/mcp.json`:
 
 ## Configuration
 
-Credentials come from `npx tram-mcp login` (saved to `~/.tram-mcp/`), the Desktop install
-form, or these environment variables (which take precedence):
+Credentials come from the in-session `testrail_login` tool or `npx tram-mcp login` (both
+save to `~/.tram-mcp/`), the Desktop install form, or these environment variables (which
+take precedence):
 
 | Variable | Required | Description |
 |---|---|---|
