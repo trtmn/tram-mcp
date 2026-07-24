@@ -34,7 +34,7 @@
     "access": "public"
   },
   "scripts": {
-    "check": "tsc --noEmit",
+    "check": "tsgo --noEmit",
     "test": "vitest run",
     "catalog": "python3 scripts/generate_catalog.py",
     "build:cli": "node scripts/build.mjs",
@@ -46,6 +46,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@typescript/native-preview": "^7.0.0-dev.20260707.2",
     "esbuild": "^0.24.0",
     "typescript": "^5.8.0",
     "vitest": "^3.1.0"
