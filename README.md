@@ -33,6 +33,14 @@ claude mcp add tram-mcp -- npx -y tram-mcp
 That's it — Claude Code spawns `npx -y tram-mcp` over stdio. Start a session and run
 `/mcp`; you should see **tram-mcp** with its tools.
 
+> **Windows:** the client spawns the command without a shell, and Windows can't execute
+> `npx` (really `npx.cmd`) that way — the server fails to start (`MCP error -32000`). Wrap
+> it in `cmd /c`:
+>
+> ```bash
+> claude mcp add tram-mcp -- cmd /c npx -y tram-mcp
+> ```
+
 **Logging in — no terminal needed.** The first time you ask Claude to do anything in
 TestRail without credentials configured, it calls the **`testrail_login`** tool, which
 opens a browser form. Enter your TestRail **URL**, **username**, and **API key** (My
