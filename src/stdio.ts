@@ -5,6 +5,7 @@ import { loadCredentials } from "./credstore";
 import type { Env } from "./env";
 import { registerTools, SERVER_INSTRUCTIONS } from "./tools";
 import { VERSION } from "./version";
+import { beginLogin } from "./wizard";
 
 /**
  * Local (non-Worker) transport adapter. The shared core — tools.ts / testrail.ts
@@ -59,8 +60,15 @@ export function buildStdioServer(env: Env = resolveLocalEnv()): McpServer {
     { name: "TestRail MCP", version: VERSION },
     { instructions: SERVER_INSTRUCTIONS },
   );
-  // No OAuth props locally — credentials resolve from env (process.env).
-  registerTools(server, { env, props: undefined });
+  // No OAuth props locally. Credentials resolve dynamically each call so a
+  // mid-session `testrail_login` is picked up without a restart; startLogin wires
+  // the in-session browser login tool to the wizard.
+  registerTools(server, {
+    env,
+    props: undefined,
+    resolveEnv: () => resolveLocalEnv(),
+    startLogin: () => beginLogin(),
+  });
   return server;
 }
 
