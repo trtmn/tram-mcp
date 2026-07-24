@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.2](https://github.com/trtmn/tram-mcp/compare/v0.8.1...v0.8.2) (2026-07-24)
+
+
+### 🔄 Maintenance
+
+* merge dev-&gt;main sync PR directly instead of via auto-merge ([#86](https://github.com/trtmn/tram-mcp/issues/86)) ([a7db80a](https://github.com/trtmn/tram-mcp/commit/a7db80a5da1446d6d8864b5f434b64c37eeb7ba1))
+
 ## [0.8.1](https://github.com/trtmn/tram-mcp/compare/v0.8.0...v0.8.1) (2026-07-24)
 
 
