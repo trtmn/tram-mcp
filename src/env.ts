@@ -78,9 +78,10 @@ export function checkConfig(env: Env, props?: ConnectionProps): string | null {
   }
   if (missing.length === 0) return null;
   const hint =
-    "Run `tram-mcp login` to enter your TestRail URL, username, and API key — " +
-    "or set TESTRAIL_URL, TESTRAIL_USERNAME, and TESTRAIL_API_KEY (or " +
-    "TESTRAIL_PASSWORD) in the environment.";
+    "Call the `testrail_login` tool to enter your TestRail URL, username, and " +
+    "API key in a browser — or run `tram-mcp login`, or set TESTRAIL_URL, " +
+    "TESTRAIL_USERNAME, and TESTRAIL_API_KEY (or TESTRAIL_PASSWORD) in the " +
+    "environment.";
   return `Missing TestRail configuration: ${missing.join(", ")}. ${hint}`;
 }
 
