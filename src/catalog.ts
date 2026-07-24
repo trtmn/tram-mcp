@@ -1,5 +1,5 @@
 import rawCatalog from "./catalog.json";
-import type { Json, QueryParams, TestRailClient } from "./testrail";
+import type { Json, PaginateOptions, QueryParams, TestRailClient } from "./testrail";
 
 export interface CatalogParam {
   name: string;
@@ -89,6 +89,8 @@ export interface DispatchOptions {
   params?: Record<string, unknown>;
   /** Extra query-string parameters appended to the request URL (any verb). */
   extraParams?: Record<string, unknown>;
+  /** Bounds applied to GET pagination follow-through (ignored for POST). */
+  pagination?: PaginateOptions;
 }
 
 /**
@@ -152,8 +154,10 @@ export async function dispatchMethod(
     // getPaginated follows TestRail's `_links.next` and flattens bulk-list
     // envelopes to a single array (single-entity GETs pass through unchanged),
     // so run_testrail_command's fields/max_results/truncated logic operates on
-    // the complete result set instead of a silently-capped first page.
-    return client.getPaginated(endpoint, { ...rest, ...extra });
+    // the complete result set instead of a silently-capped first page. The
+    // pagination bounds keep that follow-through from producing a payload large
+    // enough to break the stdio transport.
+    return client.getPaginated(endpoint, { ...rest, ...extra }, options.pagination);
   }
   return client.post(
     endpoint,
