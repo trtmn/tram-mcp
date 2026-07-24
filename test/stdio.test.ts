@@ -18,6 +18,8 @@ const EXPECTED_TOOLS = [
   "list_testrail_projects",
   "run_testrail_command",
   "search_test_cases",
+  // stdio wires startLogin, so the in-session browser-login tool is exposed too.
+  "testrail_login",
 ].sort();
 
 describe("envFromProcess", () => {
@@ -58,7 +60,7 @@ describe("buildStdioServer", () => {
     return client;
   }
 
-  it("exposes the same tool set as the Worker", async () => {
+  it("exposes the full stdio tool set (including testrail_login)", async () => {
     const client = await connect();
     const { tools } = await client.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual(EXPECTED_TOOLS);

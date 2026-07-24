@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.8.0](https://github.com/trtmn/tram-mcp/compare/v0.7.4...v0.8.0) (2026-07-24)
+
+
+### ✨ Added
+
+* add in-session testrail_login tool ([#81](https://github.com/trtmn/tram-mcp/issues/81)) ([f7f2453](https://github.com/trtmn/tram-mcp/commit/f7f24537fe97175e041b94c1785db4a2c2a8f46f))
+
+
+### 🐛 Fixed
+
+* start the stdio server reliably on Windows via a dedicated bin entry ([#78](https://github.com/trtmn/tram-mcp/issues/78)) ([1756147](https://github.com/trtmn/tram-mcp/commit/1756147cbeaf89c1b559644b17ec1b3f320ed5e2))
+
+## [0.7.4](https://github.com/trtmn/tram-mcp/compare/v0.7.3...v0.7.4) (2026-07-21)
+
+
+### 🐛 Fixed
+
+* follow TestRail pagination and correct query/retry handling ([#75](https://github.com/trtmn/tram-mcp/issues/75)) ([e095b3f](https://github.com/trtmn/tram-mcp/commit/e095b3fa58992b84fa816984046f493561b8f61f))
+
+
+### 🔄 Maintenance
+
+* **deps:** bump the actions group with 2 updates ([#74](https://github.com/trtmn/tram-mcp/issues/74)) ([9f2b52e](https://github.com/trtmn/tram-mcp/commit/9f2b52ed8df8750af9f384cf137f730c36457882))
+
 ## [0.7.3](https://github.com/trtmn/tram-mcp/compare/v0.7.2...v0.7.3) (2026-07-18)
 
 
