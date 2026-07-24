@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.3](https://github.com/trtmn/tram-mcp/compare/v0.8.2...v0.8.3) (2026-07-24)
+
+
+### 🔄 Maintenance
+
+* type-check with TypeScript 7 native preview (tsgo) ([#89](https://github.com/trtmn/tram-mcp/issues/89)) ([4904231](https://github.com/trtmn/tram-mcp/commit/49042314a8fc93f8569088953ce92f31feef7b69))
+
 ## [0.8.2](https://github.com/trtmn/tram-mcp/compare/v0.8.1...v0.8.2) (2026-07-24)
 
 
