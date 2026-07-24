@@ -25,6 +25,27 @@ export const SERVER_INSTRUCTIONS =
   "get_run_summary for run status overviews, add_result_for_case to " +
   "record a test outcome, and create_test_run to start a new run.";
 
+/**
+ * Default cap on how many list items run_testrail_command returns (and paginates
+ * for) when the caller doesn't pass max_results. A large suite can hold thousands
+ * of cases; returning them all in one MCP message produced multi-megabyte
+ * payloads that broke the stdio transport (surfacing as a -32000 connection
+ * close). One TestRail page's worth is a safe, useful default; callers raise it
+ * explicitly with max_results.
+ */
+const DEFAULT_MAX_RESULTS = 250;
+
+/**
+ * Wall-clock budget for the whole-list scan search_test_cases performs. Title
+ * search has no server-side filter, so it must page through every case; on a
+ * very large suite that can outrun the client's request timeout. Stopping at the
+ * budget and reporting a partial result keeps the connection alive.
+ */
+const SEARCH_TIME_BUDGET_MS = 25_000;
+
+/** Hard ceiling on the cases search_test_cases will scan within the budget. */
+const SEARCH_MAX_SCAN = 20_000;
+
 /** Default TestRail status IDs. Instances can add custom statuses beyond these. */
 const STATUS_IDS: Record<string, number> = {
   passed: 1,
@@ -333,9 +354,16 @@ export function registerTools(server: McpServer, ctx: ToolContext): void {
       const looked = lookupMethod(category, method);
       if ("error" in looked) return jsonResult(looked);
       try {
+        // Bound pagination to the caller's max_results (or a safe default).
+        // Fetch one extra item so we can tell "exactly N exist" from "N shown,
+        // more available" without paging through — and returning — the whole
+        // list, which is what produced the oversized, transport-breaking
+        // payloads.
+        const limit = max_results ?? DEFAULT_MAX_RESULTS;
         let result = await dispatchMethod(getClient(ctx), category, method, {
           params,
           extraParams: extra_params,
+          pagination: { maxItems: limit + 1 },
         });
 
         if (result === null || result === undefined) {
@@ -355,14 +383,19 @@ export function registerTools(server: McpServer, ctx: ToolContext): void {
             );
           }
           const list = result as unknown[];
-          if (max_results !== undefined && list.length > max_results) {
+          if (list.length > limit) {
+            const explicit = max_results !== undefined;
             return jsonResult({
-              results: list.slice(0, max_results),
+              results: list.slice(0, limit),
               truncated: true,
-              total_count: list.length,
+              returned: limit,
               message:
-                `Results truncated: showing ${max_results} of ${list.length} ` +
-                "items. Use max_results or refine your query to retrieve more.",
+                `Results truncated to ${limit} item(s); more exist. ` +
+                (explicit
+                  ? "Raise max_results (or refine the query) to retrieve more."
+                  : `No max_results was set, so a default cap of ${DEFAULT_MAX_RESULTS} ` +
+                    "was applied. Set max_results to retrieve more, or add filters " +
+                    "via params/extra_params to narrow the result."),
             });
           }
         }
@@ -395,9 +428,14 @@ export function registerTools(server: McpServer, ctx: ToolContext): void {
     },
     async ({ project_id, query, suite_id }) => {
       try {
+        // Title search has no server-side filter, so every case must be scanned.
+        // Bound the scan by time and count so a huge suite can't outrun the
+        // client's request timeout (which would drop the connection as -32000);
+        // a partial scan is reported rather than hanging.
         const response = await getClient(ctx).getPaginated(
           `get_cases/${project_id}`,
           { suite_id },
+          { timeBudgetMs: SEARCH_TIME_BUDGET_MS, maxItems: SEARCH_MAX_SCAN },
         );
         const allCases: unknown[] = Array.isArray(response)
           ? response
@@ -409,7 +447,20 @@ export function registerTools(server: McpServer, ctx: ToolContext): void {
           )
           .filter((c) => String(c.title ?? "").toLowerCase().includes(q))
           .map((c) => ({ id: c.id, title: c.title, section_id: c.section_id ?? null }));
-        return jsonResult({ count: cases.length, cases });
+        const partial = allCases.length >= SEARCH_MAX_SCAN;
+        return jsonResult({
+          count: cases.length,
+          cases,
+          scanned: allCases.length,
+          ...(partial
+            ? {
+                partial_scan: true,
+                message:
+                  `Scan hit the ${SEARCH_MAX_SCAN}-case safety cap; results may be ` +
+                  "incomplete. Pass suite_id to narrow the search.",
+              }
+            : {}),
+        });
       } catch (err) {
         return errorResult(errorMessage(err));
       }
@@ -512,9 +563,13 @@ export function registerTools(server: McpServer, ctx: ToolContext): void {
           // call fails, keep the valid summary and report the enrichment error
           // alongside it rather than discarding the run data the caller wanted.
           try {
-            const response = await client.getPaginated(`get_tests/${run_id}`, {
-              status_id: STATUS_IDS.failed,
-            });
+            // Only the first 50 failed tests are shown, so stop paging there —
+            // no need to pull thousands of tests to then discard most of them.
+            const response = await client.getPaginated(
+              `get_tests/${run_id}`,
+              { status_id: STATUS_IDS.failed },
+              { maxItems: 50 },
+            );
             const tests: unknown[] = Array.isArray(response)
               ? response
               : ((response as Record<string, unknown>)?.tests as unknown[]) ?? [];

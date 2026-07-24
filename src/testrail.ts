@@ -26,6 +26,22 @@ const MAX_RETRIES = 3;
 // Well beyond any realistic single query; prevents a runaway loop.
 const MAX_PAGES = 200;
 
+/**
+ * Bounds on a `getPaginated` follow-through. Any of these ends paging early so a
+ * single tool call can't produce a multi-megabyte payload or run long enough to
+ * trip the MCP client's request timeout (which surfaces to the caller as a
+ * -32000 "connection closed"). All are optional; omitting them preserves the
+ * original "fetch every page up to MAX_PAGES" behavior.
+ */
+export interface PaginateOptions {
+  /** Stop once this many items are collected; the result is sliced to exactly this length. */
+  maxItems?: number;
+  /** Override the default page-count safety cap. */
+  maxPages?: number;
+  /** Stop following pages after this much wall-clock time has elapsed. */
+  timeBudgetMs?: number;
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -200,16 +216,32 @@ export class TestRailClient {
    * follows `_links.next` until exhausted and returns the FULL list as a single
    * flat array. Non-paginated responses (bare arrays, single entities) are
    * returned unchanged, so this is a safe drop-in for `get` on any endpoint.
+   *
+   * `opts` bounds the follow-through (item count, page count, or a time budget)
+   * so a single call can't return a payload large enough — or run long enough —
+   * to break the MCP stdio transport. When a bound stops paging early the
+   * result is a prefix of the full list; callers that need to detect this can
+   * request `maxItems` one greater than they intend to keep and check the
+   * returned length.
    */
-  async getPaginated(endpoint: string, params?: QueryParams): Promise<Json> {
+  async getPaginated(
+    endpoint: string,
+    params?: QueryParams,
+    opts: PaginateOptions = {},
+  ): Promise<Json> {
     const first = await this.get(endpoint, params);
     if (!isPaginationEnvelope(first)) return first;
 
+    const maxPages = opts.maxPages ?? MAX_PAGES;
+    const deadline =
+      opts.timeBudgetMs !== undefined ? Date.now() + opts.timeBudgetMs : null;
     const key = listKeyOf(first) as string;
     const items: unknown[] = [...(first[key] as unknown[])];
     let next = (first._links as { next?: string | null }).next ?? null;
     let pages = 1;
-    while (next && pages < MAX_PAGES) {
+    while (next && pages < maxPages) {
+      if (opts.maxItems !== undefined && items.length >= opts.maxItems) break;
+      if (deadline !== null && Date.now() >= deadline) break;
       // `_links.next` is instance-relative (".../api/v2/get_cases/1&limit=250&
       // offset=250") and already carries its own query string, so strip the
       // leading "/api/v2/" and pass no extra params.
@@ -221,7 +253,9 @@ export class TestRailClient {
       next = (page._links as { next?: string | null }).next ?? null;
       pages++;
     }
-    return items;
+    return opts.maxItems !== undefined && items.length > opts.maxItems
+      ? items.slice(0, opts.maxItems)
+      : items;
   }
 
   post(endpoint: string, body?: Json, params?: QueryParams): Promise<Json> {

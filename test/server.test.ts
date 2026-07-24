@@ -108,10 +108,10 @@ describe("MCP server", () => {
     expect(textOf(result)).toEqual({
       results: [{ id: 1, name: "Low" }],
       truncated: true,
-      total_count: 2,
+      returned: 1,
       message:
-        "Results truncated: showing 1 of 2 items. Use max_results or refine " +
-        "your query to retrieve more.",
+        "Results truncated to 1 item(s); more exist. Raise max_results " +
+        "(or refine the query) to retrieve more.",
     });
   });
 
@@ -153,6 +153,7 @@ describe("MCP server", () => {
         { id: 1, title: "Login works", section_id: 5 },
         { id: 3, title: "LOGIN fails gracefully", section_id: 6 },
       ],
+      scanned: 3,
     });
   });
 
