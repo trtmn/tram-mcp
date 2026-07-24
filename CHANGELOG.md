@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.8.1](https://github.com/trtmn/tram-mcp/compare/v0.8.0...v0.8.1) (2026-07-24)
+
+
+### 🔄 Maintenance
+
+* add Windows cmd /c instructions to Claude Code install section ([c531142](https://github.com/trtmn/tram-mcp/commit/c531142f45df7e6034b44d5b244a64194e9f47ff))
+* document in-session testrail_login in README install info ([5b66cd1](https://github.com/trtmn/tram-mcp/commit/5b66cd122057f3fb5a02dea7418b55cf425b1805))
+* update README install info (in-session login + Windows) ([ffcdbb5](https://github.com/trtmn/tram-mcp/commit/ffcdbb5eac785ce34c85626b9379d75cc1353d8e))
+
 ## [0.8.0](https://github.com/trtmn/tram-mcp/compare/v0.7.4...v0.8.0) (2026-07-24)
 
 
