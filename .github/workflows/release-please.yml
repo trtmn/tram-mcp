@@ -131,23 +131,37 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Open or update sync PR
+      - name: Open and merge sync PR
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           TAG: ${{ needs.release-please.outputs.tag_name }}
           VERSION: ${{ needs.release-please.outputs.version }}
         run: |
-          existing=$(gh pr list --repo "$REPO" --base main --head development --state open --json number -q '.[0].number' || echo "")
-          if [ -n "$existing" ]; then
-            echo "Sync PR #$existing already open; enabling auto-merge on it."
-            gh pr merge "$existing" --repo "$REPO" --auto --merge
-            exit 0
+          pr=$(gh pr list --repo "$REPO" --base main --head development --state open --json number -q '.[0].number' || echo "")
+          if [ -z "$pr" ]; then
+            pr=$(gh pr create \
+              --repo "$REPO" \
+              --base main \
+              --head development \
+              --title "release: sync $TAG to main" \
+              --body "Auto-opened by release-please after publishing $TAG to npm. main mirrors the published tag. See the release: https://github.com/$REPO/releases/tag/$TAG and the npm page: https://www.npmjs.com/package/tram-mcp/v/$VERSION")
           fi
-          pr_url=$(gh pr create \
-            --repo "$REPO" \
-            --base main \
-            --head development \
-            --title "release: sync $TAG to main" \
-            --body "Auto-opened by release-please after publishing $TAG to npm. Auto-merging; main is just a mirror of the published tag. See the release: https://github.com/$REPO/releases/tag/$TAG and the npm page: https://www.npmjs.com/package/tram-mcp/v/$VERSION")
-          gh pr merge "$pr_url" --repo "$REPO" --auto --merge
+          # main is a mirror of already-published, already-tested code and has no
+          # required status checks. That means auto-merge cannot be enabled
+          # (GitHub: "enablePullRequestAutoMerge: Pull request is in unstable
+          # status"), which used to fail this job every release. Merge directly
+          # instead — always as a MERGE COMMIT (--merge), never squash: squashing
+          # drops development from main's ancestry and makes the next sync
+          # conflict. --delete-branch=false protects the development branch.
+          # Retry while GitHub is still computing mergeability on a fresh PR.
+          for i in $(seq 1 6); do
+            if gh pr merge "$pr" --repo "$REPO" --merge --delete-branch=false; then
+              echo "Synced $TAG to main."
+              exit 0
+            fi
+            echo "Merge not ready (attempt $i); retrying in 10s..."
+            sleep 10
+          done
+          echo "::error::Could not merge sync PR for $TAG to main"
+          exit 1
