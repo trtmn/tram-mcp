@@ -268,4 +268,68 @@ describe("getPaginated", () => {
     expect(await client().getPaginated("get_cases/1")).toEqual([{ id: 1 }]);
     expect(fn).toHaveBeenCalledTimes(1);
   });
+
+  // Each page always advertises a next link, so without a bound this would page
+  // forever (up to MAX_PAGES). The bounds must stop it early.
+  function endlessPages() {
+    let offset = 0;
+    return vi.fn(async () => {
+      const items = Array.from({ length: 250 }, (_, i) => ({ id: offset + i }));
+      offset += 250;
+      return new Response(page(items, `/api/v2/get_cases/1&offset=${offset}`));
+    });
+  }
+
+  it("maxItems stops paging early and slices to exactly maxItems", async () => {
+    const fn = endlessPages();
+    vi.stubGlobal("fetch", fn);
+    const result = (await client().getPaginated("get_cases/1", undefined, {
+      maxItems: 300,
+    })) as unknown[];
+    expect(result).toHaveLength(300);
+    // Page 1 gives 250 (< 300, keep going), page 2 reaches 500 (>= 300, stop).
+    expect(fn).toHaveBeenCalledTimes(2);
+    expect(result[299]).toEqual({ id: 299 });
+  });
+
+  it("maxItems can detect 'more exists' via a +1 fetch without returning everything", async () => {
+    const fn = endlessPages();
+    vi.stubGlobal("fetch", fn);
+    // Caller wants 10 but asks for 11 to tell 'exactly 10' from 'more available'.
+    const result = (await client().getPaginated("get_cases/1", undefined, {
+      maxItems: 11,
+    })) as unknown[];
+    expect(result).toHaveLength(11);
+    expect(fn).toHaveBeenCalledTimes(1); // first page already had >= 11
+  });
+
+  it("maxPages caps the number of pages followed", async () => {
+    const fn = endlessPages();
+    vi.stubGlobal("fetch", fn);
+    const result = (await client().getPaginated("get_cases/1", undefined, {
+      maxPages: 3,
+    })) as unknown[];
+    expect(fn).toHaveBeenCalledTimes(3);
+    expect(result).toHaveLength(750);
+  });
+
+  it("timeBudgetMs stops following pages once the budget is exhausted", async () => {
+    vi.useFakeTimers();
+    // Each page fetch advances the clock past the budget so only the first
+    // extra page is followed before the deadline check trips.
+    const fn = vi.fn(async () => {
+      vi.advanceTimersByTime(60);
+      let off = 0;
+      const items = Array.from({ length: 250 }, (_, i) => ({ id: off + i }));
+      off += 250;
+      return new Response(page(items, `/api/v2/get_cases/1&offset=next`));
+    });
+    vi.stubGlobal("fetch", fn);
+    const result = (await client().getPaginated("get_cases/1", undefined, {
+      timeBudgetMs: 50,
+    })) as unknown[];
+    // First page is always fetched; the loop's deadline check then stops it.
+    expect(result.length).toBeGreaterThanOrEqual(250);
+    expect(fn.mock.calls.length).toBeLessThanOrEqual(2);
+  });
 });

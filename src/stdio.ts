@@ -69,6 +69,21 @@ export function buildStdioServer(env: Env = resolveLocalEnv()): McpServer {
 // bundle into dist/cli.js. Two `import.meta.url === argv[1]` guards in one bundle
 // would both fire and start two servers on the same stdio, so only cli.ts keeps one.
 export async function main(): Promise<void> {
+  // Defense in depth: a stray uncaught exception or unhandled rejection would
+  // otherwise kill the process, closing the stdio transport — which the MCP
+  // client reports to the user as a -32000 "connection closed"/"server isn't
+  // up". Every tool handler already catches its own errors, so anything
+  // reaching here is unexpected; log it to stderr (never stdout, which carries
+  // the JSON-RPC stream) and keep the server alive so one bad request can't
+  // take the whole connection down. stderr is safe: the SDK's stdio transport
+  // uses only stdin/stdout for protocol traffic.
+  process.on("uncaughtException", (err) => {
+    console.error("[tram-mcp] uncaught exception:", err);
+  });
+  process.on("unhandledRejection", (reason) => {
+    console.error("[tram-mcp] unhandled rejection:", reason);
+  });
+
   const server = buildStdioServer(resolveLocalEnv());
   const transport = new StdioServerTransport();
   await server.connect(transport);
