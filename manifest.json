@@ -1,7 +1,7 @@
 {
   "manifest_version": "0.3",
   "name": "tram-mcp",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "display_name": "TestRail MCP",
   "description": "Connect Claude to your TestRail instance. Browse the API, search test cases, and manage runs and results — all through natural language. Self-contained Node bundle; no toolchain required.",
   "author": {

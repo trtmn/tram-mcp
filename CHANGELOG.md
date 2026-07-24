@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.4](https://github.com/trtmn/tram-mcp/compare/v0.8.3...v0.8.4) (2026-07-24)
+
+
+### 🐛 Fixed
+
+* point the missing-config hint at the testrail_login tool ([#92](https://github.com/trtmn/tram-mcp/issues/92)) ([dacbf47](https://github.com/trtmn/tram-mcp/commit/dacbf4708446e07284997e73670ac7d50ca01758))
+
 ## [0.8.3](https://github.com/trtmn/tram-mcp/compare/v0.8.2...v0.8.3) (2026-07-24)
 
 
