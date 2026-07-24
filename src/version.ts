@@ -5,4 +5,4 @@
  * extra-file entry in .github/release-please-config.json rewrites the
  * annotated line below on every release. test/version.test.ts fails CI if the
  * two ever drift. */
-export const VERSION = "0.7.4"; // x-release-please-version
+export const VERSION = "0.8.0"; // x-release-please-version
